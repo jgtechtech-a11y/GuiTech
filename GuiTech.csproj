@@ -14,7 +14,7 @@
     <AssemblyName>GuiTech</AssemblyName>
     <Product>Gui_Tech</Product>
     <Company>Gui_Tech</Company>
-    <Version>0.25.12</Version>
+    <Version>0.25.13</Version>
     <!-- Sem isso, o build dentro do repositório git acrescenta o hash do commit no fim
          da versão exibida (ex.: 0.25.12+546ed9fe...) e o Setup fica com nome feio. -->
     <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
