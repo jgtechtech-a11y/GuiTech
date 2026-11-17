@@ -73,7 +73,14 @@ Name: "{group}\LEIA-ME"; Filename: "{app}\LEIA-ME.txt"
 Name: "{autodesktop}\{#AppName}"; Filename: "{app}\{#AppExe}"; Tasks: desktopicon
 
 [Run]
-Filename: "{app}\{#AppExe}"; Description: "Abrir o {#AppName} agora"; Flags: nowait postinstall skipifsilent
+; runascurrentuser: o GuiTech.exe exige administrador no manifesto; sem esse flag o
+; Inno lanca com os privilegios originais e falha com CreateProcess codigo 740.
+; Na variante TESTE (instalador sem admin) o shellexec deixa o Windows pedir elevacao.
+#ifdef TESTE
+Filename: "{app}\{#AppExe}"; Description: "Abrir o {#AppName} agora"; Flags: nowait postinstall skipifsilent shellexec
+#else
+Filename: "{app}\{#AppExe}"; Description: "Abrir o {#AppName} agora"; Flags: nowait postinstall skipifsilent runascurrentuser
+#endif
 Filename: "{app}\LEIA-ME.txt"; Description: "Abrir o LEIA-ME"; Flags: shellexec postinstall unchecked skipifsilent
 
 [UninstallRun]
