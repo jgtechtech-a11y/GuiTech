@@ -1,3 +1,10 @@
+## Novidades da v0.25.13 · Gui_Tech
+
+**Aviso de versão nova funcionando de verdade**
+- O verificador de atualização agora aponta para o repositório oficial do projeto
+  no GitHub. A partir desta versão, quando sair uma versão mais nova, o aviso
+  aparece dentro do programa com o link de download correto.
+
 ## Novidades da v0.25.12 · Gui_Tech
 
 **Abertura com rosto novo**
