@@ -1,0 +1,64 @@
+name: Publicar
+
+# Versão nova no GitHub = push de tag (ex.: v0.25.12). O GitHub builda, cria a release
+# com GuiTech.exe + zip, e o verificador de atualização dentro do programa descobre
+# (UpdateChecker consulta /releases/latest, que aponta sempre para a última tag).
+# publicar.bat continua o caminho local: gera o instalador (Setup) e a pasta dist completa.
+# Os assets precisam estar no repositório: Assets\, Drivers\ e (opcional) Native\iCUE dll.
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: publicar
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Publicar (arquivo único, com o .NET embutido)
+        shell: pwsh
+        run: |
+          # A tag (v0.25.12) define a versão do exe no CI — sem precisar editar o csproj
+          $extra = @()
+          if ("$env:GITHUB_REF_NAME" -like 'v*') {
+            $extra += "-p:Version=" + "$env:GITHUB_REF_NAME".TrimStart('v')
+          }
+          dotnet publish GuiTech.csproj -c Release -r win-x64 --self-contained true `
+            -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true `
+            -p:DebugType=None @extra -o dist -nologo
+
+      - name: Montar pacote
+        shell: pwsh
+        run: |
+          Copy-Item LEIA-ME.txt dist/LEIA-ME.txt
+          Compress-Archive -Path dist/GuiTech.exe, dist/LEIA-ME.txt -DestinationPath GuiTech.zip
+
+      - name: Salvar artefatos (para rodar manualmente ou conferir)
+        uses: actions/upload-artifact@v4
+        with:
+          name: GuiTech
+          path: |
+            dist/GuiTech.exe
+            GuiTech.zip
+
+      - name: Release da versão (tag)
+        if: startsWith(github.ref, 'refs/tags/')
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create $env:GITHUB_REF_NAME GuiTech.zip dist/GuiTech.exe `
+            --title "Gui_Tech $env:GITHUB_REF_NAME" --notes-file NOVIDADES.md --latest

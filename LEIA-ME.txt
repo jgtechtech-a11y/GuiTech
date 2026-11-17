@@ -1,0 +1,171 @@
+Gui_Tech
+========
+
+Ferramenta de diagnóstico e manutenção de hardware: informações do sistema, sensores, placa de vídeo,
+FPS estimado em jogos, detector de gargalo, overlay de FPS, Gui_Tech BENCH (benchmarks de CPU, GPU, memória e disco),
+Gui_Tech OTIMIZA (RAM, programas em segundo plano/inativos, limpeza de cache e manutenção do Windows),
+Gui_Tech DEBLOAT (telemetria, anúncios, IA e apps pré-instalados) e a biblioteca de jogos com capas,
+stress test de CPU / RAM / GPU,
+CENTRAL DE DRIVERS (inventário, atualização pelo Windows Update, links oficiais, backup e ponto de restauração),
+Gui_Tech MAKER (portas COM e drivers seriais) e Gui_Tech INTEGRAÇÃO (iluminação Corsair / OpenRGB / Razer).
+
+BASEADO EM
+- Fork do RESET EXPLODE (licença MIT), de Gustavo Reset:
+  https://github.com/GustavoReset/ResetExplode
+- O aviso de copyright original está mantido no arquivo LICENSE.
+- Mudanças deste fork: tema grafite + roxo, nome Gui_Tech, Central de Drivers com atualização
+  pelo Windows Update (nunca baixa instalador de site de terceiros), bandeja do sistema,
+  MODO JOGO / MODO TRABALHO e limpeza/manutenção do Windows.
+
+REQUISITOS
+- Windows 10 ou 11, 64 bits. Não precisa instalar o .NET (já vem dentro do .exe).
+- Para temperatura e consumo da CPU, instale o driver PawnIO (uma vez só):
+      winget install namazso.PawnIO
+- Aceite o pedido de administrador ao abrir (necessário para ler os sensores).
+- Se a temperatura/consumo da CPU não aparecerem, o menu lateral mostra o motivo e um
+  botão CORRIGIR, que instala o PawnIO com um clique. Depois feche e abra o programa.
+  Se instalou o PawnIO e mesmo assim não aparecer, reinicie o PC.
+
+INSTALAR COM O INSTALADOR (recomendado)
+- Baixe o GuiTech-Setup-<versao>.exe e dê dois cliques.
+- O Windows vai avisar que o editor é desconhecido: clique em "Mais informações" e depois em
+  "Executar assim mesmo" (o programa não tem assinatura digital paga — veja o fim deste arquivo).
+- O instalador põe o programa em C:\Program Files\GuiTech, cria os atalhos no Menu Iniciar
+  (e, se você marcar, na Área de Trabalho) e aparece em "Aplicativos instalados" para desinstalar.
+- Não precisa de .NET instalado: tudo vai junto. Não abre nada escondido nem baixa nada.
+
+INSTALAR SEM INSTALADOR (versão em pasta)
+- Baixe o GuiTech.zip.
+- ANTES de extrair: botão direito no GuiTech.zip › Propriedades › marque "Desbloquear" › OK.
+  Isso impede que o Windows trate os arquivos extraídos como suspeitos.
+- Extraia o ZIP (botão direito › Extrair tudo) e abra a pasta GuiTech.
+- Rode o GuiTech.exe de dentro da pasta. Não separe o .exe dos outros arquivos: eles são
+  parte do programa (.NET e componentes do Windows vão juntos, não precisa instalar nada).
+- Esta versão não descompacta nada em %TEMP% e pode ser copiada para um pendrive.
+- Conferir o arquivo (opcional), no PowerShell:
+      Get-FileHash .\GuiTech.exe -Algorithm SHA256
+  Compare com o hash da versão que você baixou: ele está no SHA256SUMS.txt que acompanha
+  o download (e aparece no fim do publicar.bat, na pasta de origem). Se instalou pelo
+  Setup, o arquivo é C:\Program Files\GuiTech\GuiTech.exe e tem o mesmo hash da versão
+  em pasta da mesma versão.
+
+COMO USAR
+- Abra o GuiTech.exe. Na primeira vez ele demora alguns segundos para iniciar.
+- Se o Windows mostrar "O Windows protegeu o computador", clique em "Mais informações"
+  e depois em "Executar assim mesmo" (o programa não tem assinatura digital paga).
+- Overlay: Ctrl + Insert liga e desliga.
+- Visual: na v0.25.7 o programa ganhou uma cara nova — destaque teal, cartões com borda
+  fina e cantos de 8px, botões com transição suave e anel de foco no teclado, e títulos e
+  botões em caixa normal (nada de tudo em MAIÚSCULAS). O tema claro acompanhou as mudanças.
+
+REVISÃO SEMANAL (Gui_Tech FERRAMENTAS › Inicialização)
+- O interruptor "Revisar toda semana" cria uma tarefa no Agendador do Windows: uma vez por
+  semana (domingo, por volta das 11:00 — se o PC estiver desligado, roda na próxima vez que
+  ligar) o Gui_Tech faz sozinho o VERIFICAR PC + CORRIGIR, só com as correções seguras, em
+  silêncio e sem abrir nada na tela.
+- O resultado fica em revisao.txt na pasta de configurações (%AppData%\GuiTech).
+- Se o Gui_Tech já estiver aberto no horário, a revisão roda dentro dele e aparece como aviso
+  no canto da tela.
+
+COMPARAR PLACAS DE VÍDEO (Gui_Tech OC)
+- Escolha duas placas do catálogo e compare lado a lado: chip, arquitetura, núcleos, clocks,
+  memória, largura de banda, FP32 teórico, consumo e tecnologias.
+- Os números destacados são os maiores da linha. São especificações de fábrica (classe da placa);
+  para FPS real, rode o Gui_Tech BENCH.
+
+SE O ANTIVÍRUS RECLAMAR
+- O Gui_Tech não tem certificado digital pago. Sem assinatura, o Windows e alguns antivírus
+  mostram aviso para qualquer programa novo, mesmo sem nenhuma detecção real. Isso é
+  reputação, não infecção.
+- O programa pede administrador (precisa para ler sensores), cria uma tarefa para abrir
+  junto com o Windows (só se você ligar "Iniciar com o Windows") e mexe em ajustes do
+  sistema quando você manda. É o que ele se propõe a fazer; nada roda escondido.
+- Se o seu antivírus apontar um nome de ameaça, envie o arquivo para análise como falso
+  positivo no site do fabricante, informando o SHA-256 acima.
+- Enquanto isso: adicione a pasta do Gui_Tech nas exclusões do antivírus, ou use
+  "Restaurar" / "Permitir" na janela de aviso.
+
+VERIFICAR PC (tela inicial)
+- Um clique no botão VERIFICAR PC escaneia o PC e mostra o resultado na própria tela.
+- Confere memória, temporários/cache, saúde dos discos, espaço livre, dispositivos com
+  problema, inicialização, segundo plano, sistema de arquivos e reinício pendente.
+- Corrige sozinho só o que é seguro: apaga temporários e cache acumulado e, se a RAM estiver
+  acima de 75% de uso, limpa a memória em espera. NÃO apaga documentos nem a Lixeira.
+- No fim, a lista mostra cada item como CORRIGIDO, OK, PODE OTIMIZAR ou ATENÇÃO.
+- Botão CORRIGIR: aplica de uma vez as otimizações seguras (cache e temporários, memória em
+  espera e entradas de inicialização quebradas, com backup restaurável). Depois a verificação
+  roda de novo e a lista mostra o resultado.
+- A verificação de erros do disco (chkdsk /scan, só leitura) roda quando o programa está
+  aberto como administrador.
+
+TEMPERATURA MÁXIMA DA GPU (Overclock)
+- Escolha um limite de 60 a 95 °C e clique em APLICAR LIMITE.
+- O programa monta a curva de ventoinha de 5 pontos a partir do limite e ajusta sozinho a
+  velocidade: se a placa passar do limite, a ventoinha acelera; quando esfria, alivia.
+- VOLTAR AO AUTOMÁTICO devolve a curva de fábrica. Ao fechar o Gui_Tech a ventoinha também
+  volta ao driver; o limite fica salvo para a próxima abertura.
+- Funciona em placas AMD com driver recente, pela API oficial de vídeo (Overdrive8). Em
+  NVIDIA (ou sem suporte no driver) o seletor fica desativado: a curva não é exposta por
+  uma API pública.
+
+CENTRAL DE DRIVERS
+- Lista todos os drivers instalados (com versão, data e assinatura).
+- ATUALIZAR DRIVERS: procura no Windows Update os drivers novos e os que faltam para os
+  dispositivos do PC, baixa, instala e ainda pede ao Windows para procurar driver nos
+  dispositivos conectados. No fim, mostra o que continuou com problema.
+- NVIDIA e AMD: consulta a versão mais recente e abre a página oficial do seu modelo.
+- Windows Update: procurar e instalar separadamente (PROCURAR / INSTALAR TODOS).
+- Backup completo por pnputil em Documentos\GuiTech-Drivers.
+- Ponto de restauração do Windows antes de instalar um driver baixado manualmente.
+- O programa NÃO baixa nem executa instalador de driver de vídeo: quem instala é você,
+  pelo site oficial do fabricante. Os demais drivers vêm do catálogo do Windows Update.
+
+INICIALIZAÇÃO
+- Em Gui_Tech FERRAMENTAS › Inicialização, o interruptor "Iniciar com o Windows" liga o
+  programa junto com o Windows, já minimizado na bandeja do sistema (perto do relógio).
+- Na bandeja: duplo clique no ícone abre a janela; botão direito mostra "Abrir Gui_Tech" e "Sair".
+- Como o Gui_Tech precisa de administrador para ler os sensores, o Windows pede a confirmação
+  uma vez ao iniciar. Nada é instalado nem baixado por causa disso.
+
+INSTALAR APPS (Gui_Tech FERRAMENTAS › Instalar apps)
+- Mais de 30 programas essenciais pós-formatação, instalados pelo winget (o instalador de
+  pacotes que já vem no Windows): lojas de jogos, navegadores, utilitários, mídia, criação
+  e programação. Baixa do site oficial de cada fabricante e confere o arquivo antes de instalar.
+- Marque o que quiser e clique em INSTALAR SELECIONADOS; os apps são instalados um de cada
+  vez, sem janelas. O que já está instalado aparece como INSTALADO.
+
+BIBLIOTECA DE JOGOS (Gui_Tech JOGOS)
+- Os jogos instalados (Steam, Epic, GOG, Ubisoft e os adicionados à mão) aparecem em uma grade
+  com a capa, o nome e a loja. Clique em um jogo para abrir o perfil dele ao lado.
+- A capa vem do próprio PC (o que a Steam já baixou, incluindo artes personalizadas). Se faltar,
+  o app baixa a capa vertical oficial no CDN da Steam e guarda em %LOCALAPPDATA%\GuiTech\capas.
+- Jogos de outras lojas e .exe adicionados à mão usam o ícone do programa.
+
+DEBLOAT DO WINDOWS (Gui_Tech FERRAMENTAS › Debloat)
+- Lista ajustes que tiram telemetria, anúncios, sugestões, Copilot, Recall, Widgets, Chat e apps
+  pré-instalados, no estilo do Win11Debloat. Cada item mostra se já está aplicado.
+- Marque o que quer (ou MARCAR TODOS) e clique em APLICAR SELECIONADOS. Cada item tem DESFAZER
+  individual, e DESFAZER APLICADOS reverte tudo o que o Gui_Tech mudou por ali.
+- PONTO DE RESTAURAÇÃO cria uma proteção do Windows antes de mexer (se a Proteção do Sistema
+  estiver ligada). Os ajustes de barra de tarefas pedem reiniciar o Explorer no final.
+- Remover apps pré-instalados não tem desfazer por aqui: para voltar, instale pela Microsoft Store.
+- Nada de segurança é alterado: Defender, firewall, UAC e Windows Update continuam iguais.
+
+OTIMIZAÇÃO E MANUTENÇÃO
+- OTIMIZA: libera a memória em espera da RAM e enxuga o que está sobrando nos programas.
+- MODO JOGO: plano de energia Alto desempenho, Modo de Jogo ligado, gravação em segundo plano
+  (Game DVR) desligada, fecha os programas sem janela e limpa a RAM. Um clique antes de jogar.
+- MODO TRABALHO: plano de energia Equilibrado e limpeza da RAM sem fechar nada — bom para
+  muitas abas do navegador e vários programas abertos.
+- PROGRAMAS PARA FECHAR: mostra janelas abertas, programas em segundo plano (sem janela) e os
+  que estão parados. Com janela, o programa é fechado como se você clicasse no X (pode pedir para
+  salvar); sem janela, o processo é encerrado. Componentes do Windows ficam fora da lista.
+- LIMPEZA DE CACHE: temporários do usuário e do Windows, relatórios de erro, miniaturas, DirectX,
+  cache do Windows Update, entrega de atualizações e Lixeira. ANALISAR mede antes de apagar.
+- MANUTENÇÃO DO SISTEMA: SFC (arquivos do Windows), DISM (imagem do Windows) e CHKDSK
+  (verificar ou agendar reparo da unidade), com log ao vivo e botão de cancelar.
+
+OBSERVAÇÕES
+- Placas NVIDIA mostram mais detalhes (VBIOS, limites de energia, CUDA).
+- Configurações e histórico ficam em %AppData%\GuiTech (não vão junto com o .exe).
+- Use os stress tests com o limite de temperatura ligado e boa ventilação.
