@@ -64,6 +64,23 @@ public static class UpdateInstaller
         File.Exists(Path.Combine(folder ?? AppContext.BaseDirectory, "unins000.exe"));
 
     /// <summary>
+    /// Apaga instaladores de versões anteriores baixados para a pasta de atualização (o novo é
+    /// mantido). Sem isso, cada versão deixaria ~60 MB em %TEMP% para sempre.
+    /// </summary>
+    public static void CleanupOldSetups(string folder, string keep)
+    {
+        try
+        {
+            foreach (string old in Directory.EnumerateFiles(folder, "GuiTech-Setup-*.exe"))
+            {
+                if (Path.GetFileName(old).Equals(keep, StringComparison.OrdinalIgnoreCase)) continue;
+                try { File.Delete(old); } catch { /* em uso por um instalador aberto: fica para a próxima */ }
+            }
+        }
+        catch { /* pasta inexistente ou sem permissão: nada a limpar */ }
+    }
+
+    /// <summary>
     /// Baixa o Setup da versão indicada, confere o SHA-256 e devolve o caminho local.
     /// Lança <see cref="InvalidOperationException"/> quando a release não tem o instalador
     /// (versões antigas) e <see cref="InvalidDataException"/> quando o arquivo não confere.
@@ -91,6 +108,7 @@ public static class UpdateInstaller
         string folder = Path.Combine(Path.GetTempPath(), "GuiTech-update");
         Directory.CreateDirectory(folder);
         string target = Path.Combine(folder, asset);
+        CleanupOldSetups(folder, asset);
 
         using (var resp = await Http.GetAsync(AssetUrl(version, asset), HttpCompletionOption.ResponseHeadersRead, ct))
         {

@@ -72,6 +72,7 @@ public partial class MainWindow
         BtnUpdate.IsEnabled = false;
         BtnUpdateBrowser.IsEnabled = false;
         BtnUpdate.Content = "Baixando...";
+        UpdateTitle.Text = $"Versão {_update.Version.TrimStart('v', 'V')} disponível";
         UpdateStatus.Visibility = Visibility.Visible;
         UpdateProgressTrack.Visibility = Visibility.Visible;
         UpdateProgress.ScaleX = 0;

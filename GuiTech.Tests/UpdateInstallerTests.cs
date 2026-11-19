@@ -95,10 +95,39 @@ public class UpdateInstallerTests
         }
     }
 
+    [Fact]
+    public void Limpeza_apaga_instaladores_antigos_e_preserva_o_novo()
+    {
+        string pasta = Path.Combine(Path.GetTempPath(), "GuiTechUpdate-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(pasta);
+        try
+        {
+            File.WriteAllText(Path.Combine(pasta, "GuiTech-Setup-0.25.15.exe"), "");
+            File.WriteAllText(Path.Combine(pasta, "GuiTech-Setup-0.25.16.exe"), "");
+            File.WriteAllText(Path.Combine(pasta, "anotacoes.txt"), "");
+
+            UpdateInstaller.CleanupOldSetups(pasta, "GuiTech-Setup-0.25.16.exe");
+
+            string?[] restantes = Directory.GetFiles(pasta).Select(Path.GetFileName)
+                .OrderBy(n => n, StringComparer.Ordinal).ToArray();
+            Assert.Equal(new string?[] { "GuiTech-Setup-0.25.16.exe", "anotacoes.txt" }, restantes);
+        }
+        finally
+        {
+            Directory.Delete(pasta, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void Limpeza_em_pasta_inexistente_nao_lanca()
+    {
+        UpdateInstaller.CleanupOldSetups(Path.Combine(Path.GetTempPath(), "nao-existe-" + Guid.NewGuid().ToString("N")), "x.exe");
+    }
+
     /// <summary>
     /// Teste de ponta a ponta contra a release publicada (não roda no CI): baixa o Setup de
     /// verdade e confere o SHA-256 contra o SHA256SUMS.txt. Para rodar:
-    ///   $env:GUITECH_TEST_VERSION="0.25.16"; dotnet test --filter Download_real
+    ///   $env:GUITECH_TEST_VERSION="0.25.17"; dotnet test --filter Download_real
     /// Sem a variável, o teste não faz nada (o CI não depende da rede nem da release).
     /// </summary>
     [Fact]

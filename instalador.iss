@@ -14,7 +14,7 @@
   #if FileExists("..\GuiTech-dist\GuiTech\GuiTech.exe")
     #define AppVersion GetStringFileInfo("..\GuiTech-dist\GuiTech\GuiTech.exe", "ProductVersion")
   #else
-    #define AppVersion "0.25.16"
+    #define AppVersion "0.25.17"
   #endif
 #endif
 #define AppExe "GuiTech.exe"

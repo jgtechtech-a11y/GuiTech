@@ -1,3 +1,10 @@
+## Novidades da v0.25.17 · Gui_Tech
+
+**Por dentro**
+- O instalador baixado pela atualização agora é apagado de %TEMP% quando sai a versão
+  seguinte — antes, cada atualização deixava ~60 MB para trás.
+- O texto do aviso volta ao normal ao tentar de novo depois de uma falha de download.
+
 ## Novidades da v0.25.16 · Gui_Tech
 
 **Atualização em um clique**
