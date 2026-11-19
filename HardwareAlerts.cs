@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -44,22 +44,38 @@ public static class HardwareAlerts
 
     private static readonly Dictionary<string, int> _streak = new();
     private static readonly Dictionary<string, DateTime> _lastFired = new();
+    /// <summary>As temperaturas são lidas na thread da interface e os discos/bateria em segundo plano.</summary>
+    private static readonly object _gate = new();
 
     /// <summary>Zera o estado interno (usado nos testes).</summary>
     public static void Reset()
     {
-        _streak.Clear();
-        _lastFired.Clear();
+        lock (_gate)
+        {
+            _streak.Clear();
+            _lastFired.Clear();
+        }
     }
 
-    private static bool CanFire(string kind, DateTime now, TimeSpan cooldown) =>
-        !_lastFired.TryGetValue(kind, out var last) || now - last >= cooldown;
+    private static bool CanFire(string kind, DateTime now, TimeSpan cooldown)
+    {
+        lock (_gate)
+            return !_lastFired.TryGetValue(kind, out var last) || now - last >= cooldown;
+    }
+
+    private static void MarkFired(string kind, DateTime now)
+    {
+        lock (_gate) _lastFired[kind] = now;
+    }
 
     private static bool CountStreak(string kind, bool above)
     {
-        int n = above ? (_streak.TryGetValue(kind, out var s) ? s + 1 : 1) : 0;
-        _streak[kind] = n;
-        return n >= StreakNeeded;
+        lock (_gate)
+        {
+            int n = above ? (_streak.TryGetValue(kind, out var s) ? s + 1 : 1) : 0;
+            _streak[kind] = n;
+            return n >= StreakNeeded;
+        }
     }
 
     /// <summary>
@@ -74,7 +90,7 @@ public static class HardwareAlerts
         {
             if (CountStreak("cpu", cpu >= CpuTempLimit) && CanFire("cpu", now, TempCooldown))
             {
-                _lastFired["cpu"] = now;
+                MarkFired("cpu", now);
                 list.Add(new HardwareAlert
                 {
                     Kind = "cpu",
@@ -91,7 +107,7 @@ public static class HardwareAlerts
         {
             if (CountStreak("gpu", gpu >= GpuTempLimit) && CanFire("gpu", now, TempCooldown))
             {
-                _lastFired["gpu"] = now;
+                MarkFired("gpu", now);
                 list.Add(new HardwareAlert
                 {
                     Kind = "gpu",
@@ -115,7 +131,7 @@ public static class HardwareAlerts
         {
             if (d.Verdict == DiskVerdict.Critical && CanFire("disk-critical", now, DiskCooldown))
             {
-                _lastFired["disk-critical"] = now;
+                MarkFired("disk-critical", now);
                 list.Add(new HardwareAlert
                 {
                     Kind = "disk",
@@ -128,7 +144,7 @@ public static class HardwareAlerts
 
             if (d.TempC is double t && t >= DiskTempLimit && CanFire("disk-temp", now, DiskCooldown))
             {
-                _lastFired["disk-temp"] = now;
+                MarkFired("disk-temp", now);
                 list.Add(new HardwareAlert
                 {
                     Kind = "disk",
@@ -141,7 +157,7 @@ public static class HardwareAlerts
 
             if (d.Wear is double w && w >= DiskWearLimit && CanFire("disk-wear", now, DiskCooldown))
             {
-                _lastFired["disk-wear"] = now;
+                MarkFired("disk-wear", now);
                 list.Add(new HardwareAlert
                 {
                     Kind = "disk",
@@ -160,7 +176,7 @@ public static class HardwareAlerts
         var list = new List<HardwareAlert>();
         if (wear is double w && w >= BatteryWearLimit && CanFire("battery", now, BatteryCooldown))
         {
-            _lastFired["battery"] = now;
+            MarkFired("battery", now);
             list.Add(new HardwareAlert
             {
                 Kind = "battery",
@@ -173,5 +189,8 @@ public static class HardwareAlerts
     }
 
     /// <summary>Avisos pendentes (usado nos testes: quais tipos já dispararam).</summary>
-    public static bool HasFired(string kind) => _lastFired.ContainsKey(kind);
+    public static bool HasFired(string kind)
+    {
+        lock (_gate) return _lastFired.ContainsKey(kind);
+    }
 }
