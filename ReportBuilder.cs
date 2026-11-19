@@ -6,7 +6,7 @@ namespace GuiTech;
 
 public sealed record ReportNode(string Name, string? Value, List<ReportNode>? Children);
 public sealed record ReportSensor(string Hardware, string Category, string Name, string Value, string Min, string Max);
-public sealed record ReportBench(DateTime Date, string Test, string Summary);
+public sealed record ReportBench(DateTime Date, string Test, string Summary, double Score = 0);
 public sealed record ReportDisk(string Name, string Details, string Verdict, string Reasons, List<KeyValuePair<string, string>> Metrics);
 public sealed record ReportGpu(string Name, string Subtitle, List<ReportNode> Sections);
 
@@ -79,6 +79,94 @@ public static class ReportBuilder
 
     private static string E(string? s) => WebUtility.HtmlEncode(s ?? "");
 
+    /// <summary>
+    /// Relatório em CSV (abre no Excel; separador ';' é o padrão do Excel em português).
+    /// Uma linha por dado, agrupado por seção — bom para comparar entre PCs e arquivar.
+    /// </summary>
+    public static string Csv(ReportData d)
+    {
+        var sb = new StringBuilder(16 * 1024);
+        sb.AppendLine("secao;item;valor");
+
+        void Row(string section, string item, string value) =>
+            sb.AppendLine($"{Q(section)};{Q(item)};{Q(value)}");
+
+        void Nodes(string section, string prefix, IEnumerable<ReportNode> nodes)
+        {
+            foreach (var n in nodes)
+            {
+                string item = prefix.Length == 0 ? n.Name : prefix + " > " + n.Name;
+                if (n.Children is { Count: > 0 }) Nodes(section, item, n.Children);
+                else Row(section, item, n.Value ?? "");
+            }
+        }
+
+        void Cards(string section, IEnumerable<ReportDisk> cards)
+        {
+            foreach (var c in cards)
+            {
+                Row(section, c.Name + " > situação", c.Verdict);
+                if (c.Details.Length > 0) Row(section, c.Name + " > detalhes", c.Details);
+                if (c.Reasons.Length > 0) Row(section, c.Name + " > motivos", c.Reasons);
+                foreach (var m in c.Metrics) Row(section, c.Name + " > " + m.Key, m.Value);
+            }
+        }
+
+        Row("Relatório", "Gerado em", d.Date.ToString("dd/MM/yyyy HH:mm"));
+        Row("Relatório", "Computador", d.Machine);
+        Row("Relatório", "Versão do programa", d.AppVersion);
+
+        Nodes("Sistema", "", d.System);
+        foreach (var g in d.Gpus) Nodes("Placa de vídeo: " + g.Name, "", g.Sections);
+        foreach (var s in d.Sensors) Row("Sensores", $"{s.Hardware} > {s.Category} > {s.Name}", s.Value);
+        foreach (var b in d.Benchmarks)
+        {
+            Row("Benchmarks", $"{b.Date:dd/MM/yyyy HH:mm} > {b.Test}", b.Summary);
+            if (b.Score > 0) Row("Benchmarks", $"{b.Date:dd/MM/yyyy HH:mm} > {b.Test} > pontuação", b.Score.ToString("0.##"));
+        }
+        Cards("Discos", d.Disks);
+        Cards("Bateria e energia", d.Power);
+        Cards("Rede", d.Network);
+        return sb.ToString();
+    }
+
+    /// <summary>Campo CSV: entre aspas quando tiver separador, aspas ou quebra de linha.</summary>
+    private static string Q(string? s)
+    {
+        s ??= "";
+        return s.IndexOfAny(new[] { ';', '"', '\n', '\r' }) >= 0
+            ? "\"" + s.Replace("\"", "\"\"") + "\""
+            : s;
+    }
+
+    /// <summary>Gráfico de barras do histórico de benchmarks (por teste, até as 10 últimas medições).</summary>
+    private static void BenchChart(StringBuilder sb, List<ReportBench> benchmarks)
+    {
+        var groups = benchmarks.Where(b => b.Score > 0)
+            .GroupBy(b => b.Test)
+            .Select(g => (Name: g.Key, Runs: g.OrderBy(b => b.Date).TakeLast(10).ToList()))
+            .Where(g => g.Runs.Count > 0)
+            .ToList();
+        if (groups.Count == 0) return;
+
+        sb.Append("<div class=\"card\"><h3>Evolução dos benchmarks</h3>");
+        foreach (var (name, runs) in groups)
+        {
+            double max = runs.Max(r => r.Score);
+            if (max <= 0) continue;
+            sb.Append($"<div class=\"chart\"><p class=\"t\">{E(name)}</p>");
+            foreach (var r in runs)
+            {
+                double pct = Math.Clamp(r.Score / max * 100.0, 1, 100);
+                sb.Append($"<div class=\"row2\"><span class=\"lbl\">{r.Date:dd/MM HH:mm}</span>" +
+                          $"<span class=\"bar\" style=\"width:{pct:0.#}%\"></span>" +
+                          $"<span class=\"val\">{r.Score:N0}</span></div>");
+            }
+            sb.Append("</div>");
+        }
+        sb.Append("</div>");
+    }
+
     public static string Html(ReportData d)
     {
         var sb = new StringBuilder(64 * 1024);
@@ -130,7 +218,9 @@ public static class ReportBuilder
             sb.Append("<section><h2>Benchmarks e testes recentes</h2><div class=\"card\"><table><tr><th>Data</th><th>Teste</th><th>Resultado</th></tr>");
             foreach (var b in d.Benchmarks)
                 sb.Append($"<tr><td class=\"muted\">{b.Date:dd/MM/yyyy HH:mm}</td><td>{E(b.Test)}</td><td>{E(b.Summary)}</td></tr>");
-            sb.Append("</table></div></section>");
+            sb.Append("</table></div>");
+            BenchChart(sb, d.Benchmarks);
+            sb.Append("</section>");
         }
 
         sb.Append("<footer>Gerado pelo Gui_Tech. Dados lidos do Windows, do driver da placa de vídeo e dos sensores da placa-mãe; podem variar conforme o hardware.</footer>");
@@ -170,6 +260,9 @@ h1{margin:0;font-size:26px;letter-spacing:.5px}h2{margin:34px 0 12px;font-size:1
 table{width:100%;border-collapse:collapse}td,th{padding:5px 8px;border-bottom:1px solid var(--line);vertical-align:top;text-align:left}
 th{color:var(--muted);font-weight:600;font-size:12px}.k{color:var(--muted);width:38%}.num{font-family:Consolas,monospace;text-align:right;white-space:nowrap}
 .grp{font-weight:600;padding-top:12px}.inner{padding:0 0 0 14px;border-bottom:0}.nested td{font-size:13px}
+.chart{margin:0 0 12px}.chart .t{font-weight:600;font-size:13px;margin:0 0 6px}.chart .row2{display:flex;align-items:center;gap:10px;margin:0 0 4px}
+.chart .lbl{width:96px;color:var(--muted);font-size:11px;text-align:right;white-space:nowrap}
+.chart .bar{height:12px;background:var(--ok);border-radius:2px;min-width:2px;flex:none}.chart .val{font-family:Consolas,monospace;font-size:11px;color:var(--muted)}
 footer{margin-top:40px;color:var(--muted);font-size:12px}
 @media print{body{background:#fff;color:#000}.card{break-inside:avoid}}
 ";

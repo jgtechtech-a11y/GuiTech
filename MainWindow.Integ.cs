@@ -74,6 +74,7 @@ public partial class MainWindow
         _lightTimer = new DispatcherTimer(DispatcherPriority.Render) { Interval = TimeSpan.FromMilliseconds(33) };
         _lightTimer.Tick += LightTick;
         LightColor_Changed(null, null!);
+        RefreshLightProfiles();
         BtnOrgbOpen.Content = FindOpenRgb() != null ? "ABRIR O OPENRGB" : "BAIXAR O OPENRGB";
         _ = ConnectAllAsync(); // primeira abertura da aba: tenta conectar em tudo
     }
@@ -295,6 +296,100 @@ public partial class MainWindow
             BtnLightConnect.IsEnabled = true;
         }
         await ConnectAllAsync();
+    }
+
+    // ---------------- Perfis de iluminação ----------------
+
+    /// <summary>Recarrega a lista de perfis (ComboBox) e habilita os botões conforme houver dados.</summary>
+    private void RefreshLightProfiles()
+    {
+        var names = _settings.LightProfiles.Select(p => p.Name).ToList();
+        LightProfileBox.ItemsSource = names;
+        BtnLightProfileApply.IsEnabled = BtnLightProfileDelete.IsEnabled = names.Count > 0;
+        if (names.Count > 0 && LightProfileBox.SelectedIndex < 0) LightProfileBox.SelectedIndex = 0;
+    }
+
+    /// <summary>Efeito marcado na tela (Tag do RadioButton).</summary>
+    private string CurrentLightFx()
+    {
+        foreach (var rb in LightFxPanel.Children.OfType<RadioButton>())
+            if (rb.IsChecked == true) return (string)rb.Tag;
+        return "static";
+    }
+
+    private static string LightFxName(string fx) => fx switch
+    {
+        "breath" => "Respiração",
+        "rainbow" => "Arco-íris",
+        "cpu" => "Temp. da CPU",
+        "gpu" => "Temp. da GPU",
+        "load" => "Carga da CPU",
+        "off" => "Apagar",
+        _ => "Cor fixa",
+    };
+
+    private void BtnLightProfileSave_Click(object sender, RoutedEventArgs e)
+    {
+        string name = LightProfileName.Text.Trim();
+        if (name.Length == 0)
+        {
+            string baseName = LightFxName(CurrentLightFx());
+            name = baseName;
+            int n = 2;
+            while (_settings.LightProfiles.Any(p => p.Name.Equals(name, StringComparison.OrdinalIgnoreCase)))
+                name = $"{baseName} {n++}";
+        }
+
+        var profile = new LightProfile
+        {
+            Name = name,
+            Fx = CurrentLightFx(),
+            R = (byte)Math.Round(LightR.Value),
+            G = (byte)Math.Round(LightG.Value),
+            B = (byte)Math.Round(LightB.Value),
+            Bright = (int)Math.Round(LightBright.Value),
+            Speed = (int)Math.Round(LightSpeed.Value),
+            Exclusive = LightExclusive.IsChecked == true,
+        };
+
+        int at = _settings.LightProfiles.FindIndex(p => p.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
+        if (at >= 0) _settings.LightProfiles[at] = profile;
+        else _settings.LightProfiles.Add(profile);
+        _settings.Save();
+
+        LightProfileName.Text = "";
+        RefreshLightProfiles();
+        LightProfileBox.SelectedItem = name;
+        LightRunHint.Text = $"Perfil \"{name}\" salvo.";
+    }
+
+    private void BtnLightProfileApply_Click(object sender, RoutedEventArgs e)
+    {
+        if (LightProfileBox.SelectedItem is not string name) return;
+        var p = _settings.LightProfiles.FirstOrDefault(x => x.Name == name);
+        if (p == null) return;
+
+        foreach (var rb in LightFxPanel.Children.OfType<RadioButton>())
+            rb.IsChecked = (string)rb.Tag == p.Fx;
+        LightR.Value = p.R;
+        LightG.Value = p.G;
+        LightB.Value = p.B;
+        LightBright.Value = p.Bright;
+        LightSpeed.Value = p.Speed;
+        LightExclusive.IsChecked = p.Exclusive;
+        LightProfileName.Text = p.Name;
+        LightRunHint.Text = $"Perfil \"{p.Name}\" aplicado.";
+    }
+
+    private void BtnLightProfileDelete_Click(object sender, RoutedEventArgs e)
+    {
+        if (LightProfileBox.SelectedItem is not string name) return;
+        int at = _settings.LightProfiles.FindIndex(x => x.Name == name);
+        if (at < 0) return;
+        _settings.LightProfiles.RemoveAt(at);
+        _settings.Save();
+        RefreshLightProfiles();
+        LightRunHint.Text = $"Perfil \"{name}\" apagado.";
     }
 
     // ---------------- Controle ----------------

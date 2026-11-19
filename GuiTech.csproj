@@ -14,11 +14,11 @@
     <AssemblyName>GuiTech</AssemblyName>
     <Product>Gui_Tech</Product>
     <Company>Gui_Tech</Company>
-    <Version>0.25.13</Version>
+    <Version>0.25.14</Version>
     <!-- Sem isso, o build dentro do repositório git acrescenta o hash do commit no fim
          da versão exibida (ex.: 0.25.12+546ed9fe...) e o Setup fica com nome feio. -->
     <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
-    <!-- Fork de RESET EXPLODE (MIT) - https://github.com/GustavoReset/ResetExplode -->
+    <!-- Projeto derivado de um projeto MIT: o aviso de copyright original esta no LICENSE. -->
     <!-- Sempre otimizado: o Gui_Tech BENCH e os stress tests precisam do JIT otimizado também em Debug -->
     <Optimize>true</Optimize>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
@@ -31,13 +31,13 @@
     <Resource Include="Assets\logo-dark.png" />
   </ItemGroup>
 
-  <!-- Drivers seriais oficiais embutidos (RESET MAKER): cada pasta Drivers\<chip> vira recurso e é extraída na hora de instalar.
+  <!-- Drivers seriais oficiais embutidos (Gui_Tech MAKER): cada pasta Drivers\<chip> vira recurso e é extraída na hora de instalar.
        Para incluir outro, basta criar a pasta com o .inf/.cat/.sys e ligá-la em MakerDrivers.Chips (Bundle). -->
   <ItemGroup>
     <EmbeddedResource Include="Drivers\**\*" Exclude="Drivers\*.md;Drivers\*.txt" LogicalName="Drivers/%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
 
-  <!-- iCUE SDK da Corsair (RESET INTEGRAÇÃO): se a DLL estiver em Native\, ela vai junto do .exe. Não é versionada no git. -->
+  <!-- iCUE SDK da Corsair (Gui_Tech INTEGRAÇÃO): se a DLL estiver em Native\, ela vai junto do .exe. Não é versionada no git. -->
   <ItemGroup>
     <None Include="Native\iCUESDK.x64_2019.dll" Condition="Exists('Native\iCUESDK.x64_2019.dll')" Link="iCUESDK.x64_2019.dll" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>

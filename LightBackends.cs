@@ -295,7 +295,7 @@ public sealed class RazerChromaBackend : ILightBackend
         {
             title = "Gui_Tech",
             description = "Controle de iluminação do Gui_Tech",
-            author = new { name = "Gui_Tech", contact = "https://github.com/GustavoReset/ResetExplode" },
+            author = new { name = "Gui_Tech", contact = "https://github.com/jgtechtech-a11y/GuiTech" },
             device_supported = Kinds.Select(k => k.Key).ToArray(),
             category = "application",
         });

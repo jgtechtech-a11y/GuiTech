@@ -99,6 +99,9 @@ public partial class MainWindow : Window
         RefreshDrives();
         TitlePage.Text = "Visão geral";
         UpdateDashboard();
+        // Avisos automáticos de hardware (padrão: ligados).
+        AlertsToggle.IsChecked = _settings.HardwareAlerts;
+        AlertsHint.Text = _settings.HardwareAlerts ? "Avisos ligados: temperatura, disco e bateria." : "Avisos desligados.";
 
         // A janela aparece já; as coletas pesadas (WMI, sensores, GPU) rodam em paralelo fora da thread da janela.
         Loaded += async (_, _) => await LoadHardwareAsync();
@@ -118,6 +121,7 @@ public partial class MainWindow : Window
             UpdateCpuSensorWarning();
             CollectDashSample();
             UpdateBottleneck();
+            CheckHardwareAlerts();
             if (PageBench.IsVisible) UpdateBenchLive();
             if (PageOptimize.IsVisible) UpdateRamStatus();
         };
@@ -827,6 +831,22 @@ public partial class MainWindow : Window
             string value = $"{(r.Multi is double m ? $"{m:N0}" : "—")} / {(r.Single is double s ? $"{s:N0}" : "—")}";
             double frac = r.Multi is double mm ? mm / bestMt : r.Single is double ss ? ss / bestSt : 0;
             return new MeterItem(label, value, frac);
+        }).ToList();
+        UpdateBenchCompare();
+    }
+
+    /// <summary>Comparação do histórico por teste: última, melhor, média e variação.</summary>
+    private void UpdateBenchCompare()
+    {
+        var rows = global::GuiTech.BenchCompare.Build(_settings.BenchRecords);
+        BenchCompareEmpty.Visibility = rows.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+        BenchCompare.ItemsSource = rows.Select(r =>
+        {
+            string value = r.DeltaPercent is double d
+                ? $"última {r.Last:N0} · melhor {r.Best:N0} · média {r.Average:N0} · {(d >= 0 ? "+" : "")}{d:N1}%"
+                : $"última {r.Last:N0} · melhor {r.Best:N0} · média {r.Average:N0}";
+            double frac = r.Best > 0 ? Math.Clamp(r.Last / r.Best, 0, 1) : 0;
+            return new MeterItem(r.Name, value, frac);
         }).ToList();
     }
 

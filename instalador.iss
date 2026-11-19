@@ -14,7 +14,7 @@
   #if FileExists("..\GuiTech-dist\GuiTech\GuiTech.exe")
     #define AppVersion GetStringFileInfo("..\GuiTech-dist\GuiTech\GuiTech.exe", "ProductVersion")
   #else
-    #define AppVersion "0.25.13"
+    #define AppVersion "0.25.14"
   #endif
 #endif
 #define AppExe "GuiTech.exe"
@@ -51,7 +51,9 @@ WizardStyle=modern
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
 MinVersion=10.0.19041
-LicenseFile=LICENSE
+;[sem LicenseFile: a pagina de licenca mostrava o copyright original do projeto-base,
+; e o usuario nao precisa re- aceitar a MIT a cada instalacao. A LICENSE acompanha
+; a instalacao em {app}\LICENSE (exigencia da licenca MIT).
 ; Fecha o Gui_Tech sozinho antes de atualizar (o app usa este mutex).
 AppMutex=Local\GuiTech.SingleInstance
 CloseApplications=yes

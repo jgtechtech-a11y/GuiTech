@@ -681,6 +681,10 @@
                                             </DataTemplate>
                                             </ItemsControl.ItemTemplate>
                                         </ItemsControl>
+                                        <CheckBox x:Name="AlertsToggle" Content="Avisar quando a temperatura, o disco ou a bateria pedirem atenção"
+                                                  Margin="0,4,0,0" Checked="AlertsToggle_Changed" Unchecked="AlertsToggle_Changed"/>
+                                        <TextBlock x:Name="AlertsHint" Foreground="{DynamicResource Faint}" FontSize="11"
+                                                   TextWrapping="Wrap" Margin="0,6,0,0"/>
                                     </StackPanel>
                                 </DockPanel>
                             </Border>
@@ -1108,6 +1112,36 @@
                                         </DataTemplate>
                                     </ItemsControl.ItemTemplate>
                                 </ItemsControl>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Style="{StaticResource CardBorder}" Margin="0,0,0,12">
+                            <StackPanel>
+                                <TextBlock Text="PERFIS" Style="{StaticResource Label}"/>
+                                <Grid Margin="0,6,0,0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <ComboBox x:Name="LightProfileBox" MinWidth="220"/>
+                                    <Button x:Name="BtnLightProfileApply" Grid.Column="1" Style="{StaticResource OutlineButton}" Content="Aplicar"
+                                            Padding="14,6" Margin="10,0,0,0" Click="BtnLightProfileApply_Click"/>
+                                </Grid>
+                                <Grid Margin="0,8,0,0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBox x:Name="LightProfileName" MinWidth="150"/>
+                                    <Button x:Name="BtnLightProfileSave" Grid.Column="1" Style="{StaticResource PrimaryButton}" Content="Salvar atual"
+                                            Padding="14,6" Margin="10,0,0,0" Click="BtnLightProfileSave_Click"/>
+                                    <Button x:Name="BtnLightProfileDelete" Grid.Column="2" Style="{StaticResource OutlineButton}" Content="Apagar"
+                                            Padding="14,6" Margin="8,0,0,0" Click="BtnLightProfileDelete_Click"/>
+                                </Grid>
+                                <TextBlock Foreground="{DynamicResource Faint}" FontSize="11" TextWrapping="Wrap" Margin="0,8,0,0">
+                                    Salva o efeito, a cor, o brilho e a velocidade atuais com um nome. Sem nome, usa o do efeito.
+                                </TextBlock>
                             </StackPanel>
                         </Border>
 
@@ -1882,6 +1916,15 @@
                                         <TextBlock Text="HISTÓRICO" Style="{StaticResource Label}"/>
                                         <TextBlock x:Name="BenchHistoryEmpty" Text="Nenhum resultado ainda." Foreground="{DynamicResource Faint}"/>
                                         <ItemsControl x:Name="BenchHistory" ItemTemplate="{StaticResource Meter}"/>
+                                    </StackPanel>
+                                </Border>
+
+                                <Border Style="{StaticResource CardBorder}" Margin="0,12,0,0">
+                                    <StackPanel>
+                                        <TextBlock Text="COMPARAÇÃO COM O HISTÓRICO" Style="{StaticResource Label}"/>
+                                        <TextBlock x:Name="BenchCompareEmpty" Text="Rode um benchmark duas vezes para ver a evolução."
+                                                   Foreground="{DynamicResource Faint}" TextWrapping="Wrap"/>
+                                        <ItemsControl x:Name="BenchCompare" ItemTemplate="{StaticResource Meter}"/>
                                     </StackPanel>
                                 </Border>
                             </StackPanel>

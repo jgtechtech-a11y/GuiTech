@@ -9,13 +9,9 @@ stress test de CPU / RAM / GPU,
 CENTRAL DE DRIVERS (inventário, atualização pelo Windows Update, links oficiais, backup e ponto de restauração),
 Gui_Tech MAKER (portas COM e drivers seriais) e Gui_Tech INTEGRAÇÃO (iluminação Corsair / OpenRGB / Razer).
 
-BASEADO EM
-- Fork do RESET EXPLODE (licença MIT), de Gustavo Reset:
-  https://github.com/GustavoReset/ResetExplode
-- O aviso de copyright original está mantido no arquivo LICENSE.
-- Mudanças deste fork: tema grafite + roxo, nome Gui_Tech, Central de Drivers com atualização
-  pelo Windows Update (nunca baixa instalador de site de terceiros), bandeja do sistema,
-  MODO JOGO / MODO TRABALHO e limpeza/manutenção do Windows.
+LICENÇA
+- Software gratuito, licença MIT. O aviso de copyright está no arquivo LICENSE,
+  incluído na pasta de instalação.
 
 REQUISITOS
 - Windows 10 ou 11, 64 bits. Não precisa instalar o .NET (já vem dentro do .exe).

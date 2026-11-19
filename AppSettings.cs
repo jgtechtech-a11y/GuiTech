@@ -47,6 +47,23 @@ public sealed class CustomGame
     public string Args { get; set; } = "";
 }
 
+/// <summary>Perfil de iluminação salvo (efeito, cor, brilho e velocidade).</summary>
+public sealed class LightProfile
+{
+    public string Name { get; set; } = "";
+    /// <summary>static | breath | rainbow | cpu | gpu | load | off</summary>
+    public string Fx { get; set; } = "static";
+    public byte R { get; set; } = 255;
+    public byte G { get; set; } = 255;
+    public byte B { get; set; } = 255;
+    /// <summary>Brilho 0–100.</summary>
+    public int Bright { get; set; } = 100;
+    /// <summary>Velocidade 1–10 (respiração e arco-íris).</summary>
+    public int Speed { get; set; } = 5;
+    /// <summary>Controle exclusivo (iCUE).</summary>
+    public bool Exclusive { get; set; } = true;
+}
+
 /// <summary>Configurações em %AppData%\GuiTech. A chave da API é cifrada com DPAPI (só este usuário do Windows a lê).</summary>
 public sealed class AppSettings
 {
@@ -70,6 +87,8 @@ public sealed class AppSettings
     // Gui_Tech JOGOS
     public Dictionary<string, GameProfile> GameProfiles { get; set; } = new();
     public List<CustomGame> CustomGames { get; set; } = new();
+    /// <summary>Perfis de iluminação salvos (Gui_Tech INTEGRAÇÃO).</summary>
+    public List<LightProfile> LightProfiles { get; set; } = new();
 
     // Aparência
     public bool LightTheme { get; set; }
@@ -81,6 +100,9 @@ public sealed class AppSettings
     public bool WeeklyReview { get; set; }
     /// <summary>Quando a última revisão semanal rodou (automática ou pedida pelo usuário).</summary>
     public DateTime? WeeklyReviewLast { get; set; }
+
+    /// <summary>Avisos automáticos de hardware (temperatura, disco, bateria).</summary>
+    public bool HardwareAlerts { get; set; } = true;
 
     // Overlay
     public string OverlayCorner { get; set; } = "TL";

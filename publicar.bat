@@ -41,6 +41,7 @@ rmdir /s /q obj\Release >nul 2>&1
 if !errorlevel! neq 0 goto falhou
 
 copy /y "LEIA-ME.txt" "..\GuiTech-dist\GuiTech\LEIA-ME.txt" >nul
+copy /y "LICENSE" "..\GuiTech-dist\GuiTech\LICENSE" >nul
 
 echo [2/4] Compactando GuiTech.zip ...
 if exist "..\GuiTech-dist\GuiTech.zip" del /q "..\GuiTech-dist\GuiTech.zip"

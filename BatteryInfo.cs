@@ -121,6 +121,7 @@ public static class BatteryInfo
                 Verdict = verdict, Label = label,
                 Reasons = string.Join(" ", reasons),
                 Metrics = m,
+                Wear = wear,
             });
         }
 

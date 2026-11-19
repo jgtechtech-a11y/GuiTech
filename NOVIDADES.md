@@ -1,3 +1,38 @@
+## Novidades da v0.25.14 · Gui_Tech
+
+**Avisos automáticos de hardware**
+- O Gui_Tech agora fica de olho no PC enquanto está aberto: avisa quando a CPU passa
+  de 90 °C (ou a GPU de 88 °C) por 3 segundos seguidos, quando um disco está crítico,
+  muito quente (60 °C+) ou com muita escrita consumida, e quando a bateria já perdeu
+  mais de 30% da capacidade. Cada aviso aparece uma vez só, com intervalo — nada de
+  enxurrada de notificações. Ligado por padrão; o botão está na Visão geral.
+
+**Relatório com CSV e gráficos**
+- Exportar relatório agora tem três formatos: HTML (com gráficos de barras da evolução
+  dos benchmarks), CSV (abre direto no Excel, separador `;`, uma linha por dado — bom
+  para comparar dois PCs) e JSON.
+- O arquivo do relatório deixou de se chamar "RESET-EXPLODE-relatorio"; agora é
+  `GuiTech-relatorio-<data>`.
+
+**Comparação com o histórico de benchmarks**
+- Novo painel na aba do Gui_Tech BENCH: para cada teste mostra a última medição, a
+  melhor, a média e a variação (%) em relação à anterior. Serve para saber se uma
+  limpeza, um overclock ou um driver novo realmente mudaram alguma coisa.
+
+**Perfis de iluminação salvos**
+- No Gui_Tech INTEGRAÇÃO dá para salvar o efeito, a cor, o brilho e a velocidade com
+  um nome e aplicar depois com dois cliques (ou apagar). Ideal para ter "Jogo",
+  "Trabalho" e "Silencioso" prontos.
+
+**Instalador**
+- A tela de licença do assistente foi removida (não é preciso aceitar a MIT a cada
+  instalação) e o arquivo LICENSE agora é instalado junto com o programa, como a
+  licença exige.
+- Corrigido o erro 740 ao abrir o Gui_Tech no fim da instalação.
+
+**Por dentro**
+- 21 testes automáticos novos: avisos de hardware, comparação de benchmarks e o CSV.
+
 ## Novidades da v0.25.13 · Gui_Tech
 
 **Aviso de versão nova funcionando de verdade**

@@ -27,6 +27,10 @@ public sealed class DiskHealthCard
     public bool IsAlert => Verdict != DiskVerdict.Good;
     public string Reasons { get; init; } = "";
     public List<KeyValuePair<string, string>> Metrics { get; init; } = new();
+    /// <summary>Temperatura medida (°C), quando houver — usada nos avisos automáticos.</summary>
+    public double? TempC { get; init; }
+    /// <summary>Desgaste em % (SSD/bateria), quando houver — usado nos avisos automáticos.</summary>
+    public double? Wear { get; init; }
 }
 
 /// <summary>
@@ -271,6 +275,8 @@ public static class DiskHealth
             Verdict = isUsb && !anyData ? DiskVerdict.Unknown : v,
             Reasons = string.Join(" ", reasons),
             Metrics = metrics,
+            TempC = r.Temp,
+            Wear = r.Wear,
         };
     }
 
