@@ -44,7 +44,8 @@ jobs:
         shell: pwsh
         run: |
           Copy-Item LEIA-ME.txt dist/LEIA-ME.txt
-          Compress-Archive -Path dist/GuiTech.exe, dist/LEIA-ME.txt -DestinationPath GuiTech.zip
+          Copy-Item LICENSE dist/LICENSE
+          Compress-Archive -Path dist/GuiTech.exe, dist/LEIA-ME.txt, dist/LICENSE -DestinationPath GuiTech.zip
 
       - name: Salvar artefatos (para rodar manualmente ou conferir)
         uses: actions/upload-artifact@v4
@@ -52,6 +53,7 @@ jobs:
           name: GuiTech
           path: |
             dist/GuiTech.exe
+            dist/LICENSE
             GuiTech.zip
 
       - name: Release da versão (tag)
