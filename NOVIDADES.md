@@ -5,6 +5,12 @@
   do fim da página e agora fica no card **Saúde do PC**, no topo da Visão geral — visível
   sem precisar rolar.
 
+**Instalador**
+- A página que mostrava o texto do projeto original deu lugar a uma apresentação do
+  Gui_Tech (o que o programa faz) com o resumo da licença MIT; o texto completo continua
+  no LICENSE instalado junto.
+- No fim da instalação a opção agora se chama **"Executar o programa agora"**.
+
 **Por dentro**
 - Os testes automáticos (`GuiTech.Tests`) agora ficam dentro do repositório e rodam no
   build do GitHub: uma versão só é publicada se os 48 testes passarem.

@@ -1,0 +1,40 @@
+﻿Gui_Tech — diagnóstico e manutenção de hardware
+===============================================
+
+O Gui_Tech reúne, num programa só, o que normalmente exige meia dúzia de
+ferramentas:
+
+  · informações do sistema, sensores de temperatura, consumo e tensão;
+  · saúde dos discos (S.M.A.R.T.) e da bateria;
+  · desempenho: benchmarks de CPU, GPU, memória e disco, cena de jogo,
+    stress test e detector de gargalo;
+  · Gui_Tech OTIMIZA: limpeza de temporários e cache, programas em segundo
+    plano e manutenção do Windows;
+  · Gui_Tech DEBLOAT: telemetria, anúncios, IA e apps pré-instalados;
+  · Gui_Tech JOGOS: biblioteca com capas, perfil por jogo e overlay de FPS;
+  · Central de drivers: inventário, Windows Update, backup e ponto de
+    restauração;
+  · Gui_Tech MAKER: portas COM e drivers seriais;
+  · Gui_Tech INTEGRAÇÃO: iluminação Corsair, OpenRGB e Razer.
+
+Tudo é lido do próprio Windows, do driver da placa de vídeo e dos sensores
+da placa-mãe. O programa não envia seus dados para nenhum servidor.
+
+Requisitos: Windows 10 (versão 2004) ou Windows 11, 64 bits.
+
+
+Licença MIT
+-----------
+
+Este programa é software livre, distribuído sob a licença MIT. Você pode
+usar, copiar, modificar, fundir, publicar e redistribuir o programa, desde
+que o aviso de copyright e o texto da licença acompanhem as cópias.
+
+O programa é fornecido "como está", sem garantia de qualquer tipo, expressa
+ou implícita. Os autores não respondem por danos decorrentes do uso.
+
+O texto completo da licença está no arquivo LICENSE, na pasta onde o
+Gui_Tech foi instalado.
+
+Como todos os dados lidos são do seu próprio computador, nada é coletado
+nem enviado. As configurações e o histórico ficam em %AppData%\GuiTech.

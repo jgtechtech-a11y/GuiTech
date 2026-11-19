@@ -51,9 +51,10 @@ WizardStyle=modern
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
 MinVersion=10.0.19041
-;[sem LicenseFile: a pagina de licenca mostrava o copyright original do projeto-base,
-; e o usuario nao precisa re- aceitar a MIT a cada instalacao. A LICENSE acompanha
-; a instalacao em {app}\LICENSE (exigencia da licenca MIT).
+; Sem LicenseFile: a pagina de aceite da MIT nao e necessaria a cada instalacao.
+; Em vez dela, o assistente mostra INSTALACAO.txt (o que o programa faz + licenca MIT),
+; e a LICENSE completa acompanha a instalacao em {app}\LICENSE (exigencia da MIT).
+InfoBeforeFile=INSTALACAO.txt
 ; Fecha o Gui_Tech sozinho antes de atualizar (o app usa este mutex).
 AppMutex=Local\GuiTech.SingleInstance
 CloseApplications=yes
@@ -79,9 +80,9 @@ Name: "{autodesktop}\{#AppName}"; Filename: "{app}\{#AppExe}"; Tasks: desktopico
 ; Inno lanca com os privilegios originais e falha com CreateProcess codigo 740.
 ; Na variante TESTE (instalador sem admin) o shellexec deixa o Windows pedir elevacao.
 #ifdef TESTE
-Filename: "{app}\{#AppExe}"; Description: "Abrir o {#AppName} agora"; Flags: nowait postinstall skipifsilent shellexec
+Filename: "{app}\{#AppExe}"; Description: "Executar o programa agora"; Flags: nowait postinstall skipifsilent shellexec
 #else
-Filename: "{app}\{#AppExe}"; Description: "Abrir o {#AppName} agora"; Flags: nowait postinstall skipifsilent runascurrentuser
+Filename: "{app}\{#AppExe}"; Description: "Executar o programa agora"; Flags: nowait postinstall skipifsilent runascurrentuser
 #endif
 Filename: "{app}\LEIA-ME.txt"; Description: "Abrir o LEIA-ME"; Flags: shellexec postinstall unchecked skipifsilent
 
