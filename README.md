@@ -1,4 +1,4 @@
-﻿# Gui_Tech
+# Gui_Tech
 
 > **Diagnóstico e otimização de PC para Windows** — sensores em tempo real, drivers, benchmarks,
 > limpeza, perfis para jogos e verificação de saúde do hardware, tudo em um só programa.
@@ -285,7 +285,7 @@ para se atualizar em um clique.
 - ✔ Biblioteca de jogos em grade com capas da Steam, ícone do .exe e cache local
 - ✔ Gui_Tech DEBLOAT: 30 ajustes de telemetria/IA/interface/apps com estado real e desfazer
 - ✔ Tela de abertura (splash) e aviso de versão nova dentro do app
-- ✔ Testes automáticos (`GuiTech.Tests`, 65 testes, rodando no build do GitHub) e versão publicada por tag
+- ✔ Testes automáticos (`GuiTech.Tests`, rodando no build do GitHub) e versão publicada por tag
 
 ## Próximas ideias
 
