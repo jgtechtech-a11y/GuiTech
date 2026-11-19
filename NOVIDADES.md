@@ -1,3 +1,14 @@
+## Novidades da v0.25.15 · Gui_Tech
+
+**Aviso de hardware mais fácil de achar**
+- A caixa "Avisar quando a temperatura, o disco ou a bateria pedirem atenção" saiu do card
+  do fim da página e agora fica no card **Saúde do PC**, no topo da Visão geral — visível
+  sem precisar rolar.
+
+**Por dentro**
+- Os testes automáticos (`GuiTech.Tests`) agora ficam dentro do repositório e rodam no
+  build do GitHub: uma versão só é publicada se os 48 testes passarem.
+
 ## Novidades da v0.25.14 · Gui_Tech
 
 **Avisos automáticos de hardware**

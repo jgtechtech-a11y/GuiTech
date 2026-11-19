@@ -377,6 +377,11 @@
                                             </Border.RenderTransform>
                                         </Border>
                                     </Grid>
+                                    <CheckBox x:Name="AlertsToggle" Margin="0,12,0,0"
+                                              Content="Avisar quando a temperatura, o disco ou a bateria pedirem atenção"
+                                              Checked="AlertsToggle_Changed" Unchecked="AlertsToggle_Changed"/>
+                                    <TextBlock x:Name="AlertsHint" Foreground="{DynamicResource Faint}" FontSize="11"
+                                               TextWrapping="Wrap" Margin="0,4,0,0"/>
                                 </StackPanel>
                                 <Button x:Name="BtnPcCheck" Grid.Column="1" Style="{StaticResource PrimaryButton}" Content="Verificar PC"
                                         FontSize="14" Padding="28,14" VerticalAlignment="Center" Click="BtnPcCheck_Click"
@@ -681,10 +686,6 @@
                                             </DataTemplate>
                                             </ItemsControl.ItemTemplate>
                                         </ItemsControl>
-                                        <CheckBox x:Name="AlertsToggle" Content="Avisar quando a temperatura, o disco ou a bateria pedirem atenção"
-                                                  Margin="0,4,0,0" Checked="AlertsToggle_Changed" Unchecked="AlertsToggle_Changed"/>
-                                        <TextBlock x:Name="AlertsHint" Foreground="{DynamicResource Faint}" FontSize="11"
-                                                   TextWrapping="Wrap" Margin="0,6,0,0"/>
                                     </StackPanel>
                                 </DockPanel>
                             </Border>

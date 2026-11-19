@@ -28,6 +28,10 @@ jobs:
         with:
           dotnet-version: '10.0.x'
 
+      - name: Testes automáticos
+        shell: pwsh
+        run: dotnet test GuiTech.Tests/GuiTech.Tests.csproj -c Debug --nologo
+
       - name: Publicar (arquivo único, com o .NET embutido)
         shell: pwsh
         run: |

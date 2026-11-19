@@ -282,16 +282,13 @@ automaticamente.
 - ✔ Biblioteca de jogos em grade com capas da Steam, ícone do .exe e cache local
 - ✔ Gui_Tech DEBLOAT: 30 ajustes de telemetria/IA/interface/apps com estado real e desfazer
 - ✔ Tela de abertura (splash) e aviso de versão nova dentro do app
-- ✔ Testes automáticos (`GuiTech.Tests`) e versão publicada no GitHub por tag
+- ✔ Testes automáticos (`GuiTech.Tests`, 48 testes, rodando no build do GitHub) e versão publicada por tag
 
 ## Próximas ideias
 
-- Relatório em CSV e com gráficos
-- Comparar resultados de benchmark entre PCs / histórico de relatórios
+- Comparar resultados de benchmark entre PCs (trocar relatórios entre máquinas)
 - Leitura direta de SPD / Super I/O
-- Gui_Tech INTEGRAÇÃO: perfis salvos, efeitos por jogo, SDKs nativos da MSI/ASUS/Gigabyte se
-  forem liberados
-- Alertas de temperatura, bateria e saúde de disco em segundo plano
+- Gui_Tech INTEGRAÇÃO: efeitos por jogo e SDKs nativos da MSI/ASUS/Gigabyte se forem liberados
 
 ## Licença
 

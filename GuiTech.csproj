@@ -14,7 +14,7 @@
     <AssemblyName>GuiTech</AssemblyName>
     <Product>Gui_Tech</Product>
     <Company>Gui_Tech</Company>
-    <Version>0.25.14</Version>
+    <Version>0.25.15</Version>
     <!-- Sem isso, o build dentro do repositório git acrescenta o hash do commit no fim
          da versão exibida (ex.: 0.25.12+546ed9fe...) e o Setup fica com nome feio. -->
     <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
@@ -29,6 +29,16 @@
     <Resource Include="Assets\app.ico" />
     <Resource Include="Assets\logo-badge.png" />
     <Resource Include="Assets\logo-dark.png" />
+  </ItemGroup>
+
+  <!-- Os testes automáticos ficam em GuiTech.Tests\ (dentro do repositório, mas fora deste
+       projeto). Sem estes Remove, o SDK pegaria os .cs e os bin\obj deles junto com o app. -->
+  <ItemGroup>
+    <Compile Remove="GuiTech.Tests\**" />
+    <Page Remove="GuiTech.Tests\**" />
+    <Resource Remove="GuiTech.Tests\**" />
+    <None Remove="GuiTech.Tests\**" />
+    <EmbeddedResource Remove="GuiTech.Tests\**" />
   </ItemGroup>
 
   <!-- Drivers seriais oficiais embutidos (Gui_Tech MAKER): cada pasta Drivers\<chip> vira recurso e é extraída na hora de instalar.
