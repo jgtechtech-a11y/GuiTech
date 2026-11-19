@@ -1,4 +1,4 @@
-# Gui_Tech
+﻿# Gui_Tech
 
 > **Diagnóstico e otimização de PC para Windows** — sensores em tempo real, drivers, benchmarks,
 > limpeza, perfis para jogos e verificação de saúde do hardware, tudo em um só programa.
@@ -9,8 +9,10 @@ O app roda como administrador (necessário para sensores de baixo nível); não 
 de outros lugares.
 
 O app avisa sozinho quando existe versão nova: consulta as Releases do GitHub uma vez por dia e
-mostra um aviso no topo da Visão geral com o link para baixar. Silencioso quando não há internet
-ou quando você já está na versão mais recente.
+mostra um aviso no topo da Visão geral. Na versão instalada, o botão **Atualizar agora** baixa o
+instalador, confere o SHA-256 publicado e roda o Setup sozinho — no fim o programa reabre já na
+versão nova. Rodando o exe solto (portátil), o botão abre a página da versão no navegador.
+Silencioso quando não há internet ou quando você já está na versão mais recente.
 
 ---
 
@@ -251,11 +253,12 @@ ISCC não estiver instalado, esse passo é pulado e o resto continua.
 
 ### Versão nova publicada no GitHub
 
-A cada **tag** (ex.: `git tag v0.25.14` + `git push origin v0.25.14`), o GitHub Actions
-(`.github/workflows/publicar.yml`) compila o app, cria uma release nessa versão com o
-`GuiTech.exe` e um `.zip`, e marca como a mais recente. O verificador de atualização dentro do
-app lê essa página (`UpdateChecker.cs`), então os usuários veem o aviso de versão nova
-automaticamente.
+A cada **tag** (ex.: `git tag v0.25.16` + `git push origin v0.25.16`), o GitHub Actions
+(`.github/workflows/publicar.yml`) compila o app, roda os testes e cria uma release com o
+**Setup** (`GuiTech-Setup-<versão>.exe`), o `GuiTech.exe`, o `.zip` e o `SHA256SUMS.txt`,
+marcando como a mais recente. O verificador de atualização dentro do app lê essa página
+(`UpdateChecker.cs`) e o botão **Atualizar agora** usa o Setup + os hashes (`UpdateInstaller.cs`)
+para se atualizar em um clique.
 
 ## Observações
 
@@ -282,7 +285,7 @@ automaticamente.
 - ✔ Biblioteca de jogos em grade com capas da Steam, ícone do .exe e cache local
 - ✔ Gui_Tech DEBLOAT: 30 ajustes de telemetria/IA/interface/apps com estado real e desfazer
 - ✔ Tela de abertura (splash) e aviso de versão nova dentro do app
-- ✔ Testes automáticos (`GuiTech.Tests`, 48 testes, rodando no build do GitHub) e versão publicada por tag
+- ✔ Testes automáticos (`GuiTech.Tests`, 65 testes, rodando no build do GitHub) e versão publicada por tag
 
 ## Próximas ideias
 

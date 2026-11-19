@@ -1,3 +1,21 @@
+## Novidades da v0.25.16 · Gui_Tech
+
+**Atualização em um clique**
+- Quando aparece a versão nova, o botão **Atualizar agora** baixa o instalador na hora,
+  mostra o progresso e abre o Setup sozinho — sem passar pelo navegador.
+- Antes de rodar, o download é conferido com o **SHA-256** publicado junto da versão:
+  se o arquivo não bater, ele é descartado e nada é instalado.
+- A instalação roda sem assistente (só com a barra de progresso do instalador) e, no fim,
+  o Gui_Tech reabre sozinho já na versão nova — suas configurações e histórico continuam
+  os mesmos.
+- Sobrou o botão **Abrir no navegador** para quem preferir baixar na mão.
+- Rodando a versão portátil (o exe solto, sem instalar), o botão abre a página da versão
+  no navegador — assim o programa não instala uma cópia nova sem você pedir.
+
+**Por dentro**
+- A release agora publica o **Setup** e o **SHA256SUMS.txt**, além do GuiTech.exe e do zip.
+- 64 testes automáticos (`GuiTech.Tests`) rodando antes de cada publicação.
+
 ## Novidades da v0.25.15 · Gui_Tech
 
 **Aviso de hardware mais fácil de achar**

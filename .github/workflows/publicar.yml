@@ -1,9 +1,10 @@
 name: Publicar
 
-# Versão nova no GitHub = push de tag (ex.: v0.25.12). O GitHub builda, cria a release
-# com GuiTech.exe + zip, e o verificador de atualização dentro do programa descobre
-# (UpdateChecker consulta /releases/latest, que aponta sempre para a última tag).
-# publicar.bat continua o caminho local: gera o instalador (Setup) e a pasta dist completa.
+# Versão nova no GitHub = push de tag (ex.: v0.25.16). O GitHub builda e cria a release com
+# o Setup (instalador), o GuiTech.exe (arquivo único), o GuiTech.zip e o SHA256SUMS.txt.
+# O proprio programa usa esses arquivos para se atualizar em um clique: baixa o Setup da
+# release, confere o SHA-256 contra o SHA256SUMS.txt e executa o instalador.
+# publicar.bat continua o caminho local (mesmos arquivos em ..\GuiTech-dist).
 # Os assets precisam estar no repositório: Assets\, Drivers\ e (opcional) Native\iCUE dll.
 
 on:
@@ -32,10 +33,40 @@ jobs:
         shell: pwsh
         run: dotnet test GuiTech.Tests/GuiTech.Tests.csproj -c Debug --nologo
 
-      - name: Publicar (arquivo único, com o .NET embutido)
+      - name: Publicar em pasta (base do instalador)
         shell: pwsh
         run: |
-          # A tag (v0.25.12) define a versão do exe no CI — sem precisar editar o csproj
+          # A tag (v0.25.16) define a versão do exe no CI — sem precisar editar o csproj
+          $extra = @()
+          if ("$env:GITHUB_REF_NAME" -like 'v*') {
+            $extra += "-p:Version=" + "$env:GITHUB_REF_NAME".TrimStart('v')
+          }
+          dotnet publish GuiTech.csproj -c Release -r win-x64 --self-contained true `
+            -p:PublishSingleFile=false -p:DebugType=None @extra -o app -nologo
+          Copy-Item LEIA-ME.txt app/LEIA-ME.txt
+          Copy-Item LICENSE app/LICENSE
+
+      - name: Gerar o instalador (Setup)
+        shell: pwsh
+        run: |
+          $iscc = @(
+            "$env:LOCALAPPDATA\Programs\Inno Setup 6\ISCC.exe",
+            "${env:ProgramFiles}\Inno Setup 6\ISCC.exe",
+            "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+          ) | Where-Object { Test-Path $_ } | Select-Object -First 1
+          if (-not $iscc) { throw "Inno Setup nao encontrado no runner." }
+
+          $args = @("/Qp", "/DSourceDir=app", "/DOutputDir=setup-out")
+          if ("$env:GITHUB_REF_NAME" -like 'v*') {
+            $args += "/DAppVersion=" + "$env:GITHUB_REF_NAME".TrimStart('v')
+          }
+          & $iscc @args instalador.iss
+          if ($LASTEXITCODE -ne 0) { throw "ISCC falhou (codigo $LASTEXITCODE)." }
+          Get-ChildItem setup-out
+
+      - name: Publicar arquivo único (versão portátil)
+        shell: pwsh
+        run: |
           $extra = @()
           if ("$env:GITHUB_REF_NAME" -like 'v*') {
             $extra += "-p:Version=" + "$env:GITHUB_REF_NAME".TrimStart('v')
@@ -44,12 +75,22 @@ jobs:
             -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true `
             -p:DebugType=None @extra -o dist -nologo
 
-      - name: Montar pacote
+      - name: Montar pacote e conferência SHA-256
         shell: pwsh
         run: |
           Copy-Item LEIA-ME.txt dist/LEIA-ME.txt
           Copy-Item LICENSE dist/LICENSE
-          Compress-Archive -Path dist/GuiTech.exe, dist/LEIA-ME.txt, dist/LICENSE -DestinationPath GuiTech.zip
+          Compress-Archive -Path dist/GuiTech.exe, dist/LEIA-ME.txt, dist/LICENSE -DestinationPath GuiTech.zip -Force
+
+          $setup = Get-ChildItem setup-out/GuiTech-Setup-*.exe | Select-Object -First 1
+          if (-not $setup) { throw "O instalador nao foi gerado." }
+          $lines = @(
+            "$((Get-FileHash $setup.FullName -Algorithm SHA256).Hash)  $($setup.Name)",
+            "$((Get-FileHash dist/GuiTech.exe -Algorithm SHA256).Hash)  GuiTech.exe",
+            "$((Get-FileHash GuiTech.zip -Algorithm SHA256).Hash)  GuiTech.zip"
+          )
+          $lines | Set-Content setup-out/SHA256SUMS.txt -Encoding ASCII
+          Get-Content setup-out/SHA256SUMS.txt
 
       - name: Salvar artefatos (para rodar manualmente ou conferir)
         uses: actions/upload-artifact@v4
@@ -59,6 +100,8 @@ jobs:
             dist/GuiTech.exe
             dist/LICENSE
             GuiTech.zip
+            setup-out/GuiTech-Setup-*.exe
+            setup-out/SHA256SUMS.txt
 
       - name: Release da versão (tag)
         if: startsWith(github.ref, 'refs/tags/')
@@ -66,5 +109,6 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release create $env:GITHUB_REF_NAME GuiTech.zip dist/GuiTech.exe `
+          $setup = (Get-ChildItem setup-out/GuiTech-Setup-*.exe | Select-Object -First 1).FullName
+          gh release create $env:GITHUB_REF_NAME GuiTech.zip dist/GuiTech.exe $setup setup-out/SHA256SUMS.txt `
             --title "Gui_Tech $env:GITHUB_REF_NAME" --notes-file NOVIDADES.md --latest

@@ -14,12 +14,19 @@
   #if FileExists("..\GuiTech-dist\GuiTech\GuiTech.exe")
     #define AppVersion GetStringFileInfo("..\GuiTech-dist\GuiTech\GuiTech.exe", "ProductVersion")
   #else
-    #define AppVersion "0.25.15"
+    #define AppVersion "0.25.16"
   #endif
 #endif
 #define AppExe "GuiTech.exe"
 #define AppPublisher "Gui_Tech"
-#define SourceDir "..\GuiTech-dist\GuiTech"
+; SourceDir/OutputDir podem vir do CI (/DSourceDir=dist /DOutputDir=dist), onde o
+; repositorio e a propria pasta do projeto. Localmente, publicar.bat usa ..\GuiTech-dist.
+#ifndef SourceDir
+  #define SourceDir "..\GuiTech-dist\GuiTech"
+#endif
+#ifndef OutputDir
+  #define OutputDir "..\GuiTech-dist"
+#endif
 
 [Setup]
 AppId={{8F3C1A64-5B27-4E9D-9B41-2C6D7A0E5F13}
@@ -32,7 +39,7 @@ DefaultDirName={autopf}\GuiTech
 #endif
 DefaultGroupName={#AppName}
 DisableProgramGroupPage=yes
-OutputDir=..\GuiTech-dist
+OutputDir={#OutputDir}
 #ifdef TESTE
 OutputBaseFilename=GuiTech-Setup-TESTE
 PrivilegesRequired=lowest
@@ -86,6 +93,15 @@ Filename: "{app}\{#AppExe}"; Description: "Executar o programa agora"; Flags: no
 #endif
 Filename: "{app}\LEIA-ME.txt"; Description: "Abrir o LEIA-ME"; Flags: shellexec postinstall unchecked skipifsilent
 
+; Atualização em um clique: o app baixa este Setup, confere o SHA-256 e o executa com
+; /SILENT ... /AUTO. A entrada abaixo (fora do postinstall, pois /SILENT pula a pagina
+; final) reabre o Gui_Tech como o usuario quando /AUTO foi usado.
+#ifdef TESTE
+Filename: "{app}\{#AppExe}"; Flags: nowait shellexec; Check: IsAutoUpdate
+#else
+Filename: "{app}\{#AppExe}"; Flags: nowait runascurrentuser; Check: IsAutoUpdate
+#endif
+
 [UninstallRun]
 ; Remove a tarefa que o app cria para abrir junto com o Windows (se o usuario ligou).
 Filename: "{sys}\schtasks.exe"; Parameters: "/Delete /TN GuiTech /F"; Flags: runhidden; RunOnceId: "DelAutoStartTask"
@@ -95,6 +111,26 @@ Filename: "{sys}\schtasks.exe"; Parameters: "/Delete /TN GuiTech /F"; Flags: run
 Type: dirifempty; Name: "{app}"
 
 [Code]
+function HasParam(const Name: string): Boolean;
+var
+  I: Integer;
+begin
+  Result := False;
+  for I := 1 to ParamCount do
+    if CompareText(ParamStr(I), Name) = 0 then
+    begin
+      Result := True;
+      Exit;
+    end;
+end;
+
+{ Verdadeiro quando o proprio Gui_Tech iniciou o Setup para se atualizar (/AUTO).
+  Nesse modo o instalador e silencioso, entao quem reabre o programa e a entrada [Run]. }
+function IsAutoUpdate: Boolean;
+begin
+  Result := HasParam('/AUTO');
+end;
+
 function InitializeSetup(): Boolean;
 begin
   Result := True;
