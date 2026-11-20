@@ -64,6 +64,18 @@ public sealed class LightProfile
     public bool Exclusive { get; set; } = true;
 }
 
+/// <summary>
+/// Perfil de overclock da GPU salvo na aba Gui_Tech OC: teto de clock, clock da memória e
+/// limite de energia (%). Serve para voltar a uma configuração conhecida sem mexer nos sliders.
+/// </summary>
+public sealed class OcProfile
+{
+    public string Name { get; set; } = "";
+    public int Core { get; set; }
+    public int Mem { get; set; }
+    public int Power { get; set; }
+}
+
 /// <summary>Configurações em %AppData%\GuiTech. A chave da API é cifrada com DPAPI (só este usuário do Windows a lê).</summary>
 public sealed class AppSettings
 {
@@ -113,6 +125,12 @@ public sealed class AppSettings
     // Ventoinha da GPU
     /// <summary>Temperatura máxima desejada para a GPU (°C). 0 = ventoinha no automático do driver.</summary>
     public int GpuFanTarget { get; set; }
+
+    // Overclock da GPU (Gui_Tech OC)
+    /// <summary>Perfis de clock/memória/energia salvos pelo usuário.</summary>
+    public List<OcProfile> OcProfiles { get; set; } = new();
+    /// <summary>Perfil aplicado automaticamente quando o Gui_Tech abre (null = nenhum).</summary>
+    public string? OcProfileOnStart { get; set; }
 
     [System.Text.Json.Serialization.JsonIgnore] // nunca gravar a chave em texto puro
     public string? HowManyFpsKey

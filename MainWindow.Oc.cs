@@ -31,9 +31,15 @@ public partial class MainWindow
     {
         InitFan();
         InitGpuCompare();
+        bool amd = InitAmdTuning();
         nint ocGpu = OcGpu;
         OcGpuTitle.Text = ((_gpus.Count > 0) ? ("GPU · " + GameCatalog.ShortGpuName(_gpus[0].Name).ToUpperInvariant()) : "GPU");
-        if (ocGpu == IntPtr.Zero)
+        if (amd)
+        {
+            // Placa AMD com clock/energia no Overdrive8: o cartão NVIDIA (NVML) sai de cena.
+            OcNvCard.Visibility = Visibility.Collapsed;
+        }
+        else if (ocGpu == IntPtr.Zero)
         {
             OcGpuState.Text = "Energia e teto de clock por esta via: só placas NVIDIA (driver oficial). " +
                               "Em placas AMD, use o limite de temperatura da ventoinha logo abaixo.";
@@ -233,6 +239,285 @@ public partial class MainWindow
         string? text = Nvml.Explain(code) ?? Nvml.Explain(num3);
         ocGpuResult.Text = ((text != null) ? ("Restauração parcial: " + text + ".") : "GPU de volta ao padrão de fábrica.");
         UpdateOcGpuState();
+    }
+
+    // ================= Ajustes AMD (Overdrive8) =================
+
+    private bool _amdTuning;
+
+    /// <summary>Monta o cartão de clock/energia da AMD. Retorna true quando ele assume o lugar do NVIDIA.</summary>
+    private bool InitAmdTuning()
+    {
+        AmdTuningCard.Visibility = Visibility.Collapsed;
+        _amdTuning = false;
+        if (!AmdGpuFan.TuningAvailable) return false;
+
+        var core = AmdGpuFan.Core();
+        var mem = AmdGpuFan.Memory();
+        var power = AmdGpuFan.Power();
+        if (core == null || mem == null || power == null) return false;
+
+        string gpu = _gpus.Count > 0 ? GameCatalog.ShortGpuName(_gpus[0].Name) : "AMD";
+        AmdTuningTitle.Text = "AJUSTES AMD (OVERDRIVE8) · " + gpu.ToUpperInvariant();
+        AmdTuningIntro.Text =
+            $"O driver informa para esta placa: clock da GPU {core.Value.Min}–{core.Value.Max} MHz " +
+            $"(padrão {core.Value.Default}), memória {mem.Value.Min}–{mem.Value.Max} MHz " +
+            $"(padrão {mem.Value.Default}) e energia de {power.Value.Min}% a {power.Value.Max}% " +
+            $"(padrão {power.Value.Default}%).";
+
+        ApplyReading(AmdCore, core.Value);
+        ApplyReading(AmdMem, mem.Value);
+        ApplyReading(AmdPower, power.Value);
+        UpdateAmdLabels();
+
+        // Nesta placa o clock já pode estar no teto exposto pelo driver: avisa em vez de deixar
+        // o usuário descobrir só depois de aplicar (o driver recusa reduzir o clock máximo).
+        AmdCoreHint.Text = core.Value.Current >= core.Value.Max
+            ? $"Esta placa já está no clock máximo que o driver expõe ({core.Value.Max} MHz). " +
+              "Não há folga para subir; baixar não é aceito pelo driver desta placa."
+            : "Teto de clock da GPU. Subir aumenta o FPS e o calor; o limite de energia abaixo " +
+              "costuma ser o que segura o ganho. O driver pode recusar valores abaixo do atual.";
+
+        AmdTuningResult.Text = "";
+        AmdTuningCard.Visibility = Visibility.Visible;
+        _amdTuning = true;
+
+        RefreshOcProfiles();
+        // Perfil marcado como "aplicar ao abrir": entra já aplicado, sem o usuário clicar em nada.
+        if (OcProfileStore.Find(_settings.OcProfiles, _settings.OcProfileOnStart) is { } auto)
+            ApplyOcProfile(auto, startup: true);
+
+        return true;
+    }
+
+    private static void ApplyReading(Slider slider, AmdGpuFan.Reading r)
+    {
+        slider.Minimum = r.Min;
+        slider.Maximum = r.Max;
+        slider.Value = Od8Tuning.Fit(r.Current, r.Min, r.Max);
+    }
+
+    /// <summary>Relê os valores da placa e reposiciona os controles (após aplicar ou restaurar).</summary>
+    private void RefreshAmdTuning()
+    {
+        var core = AmdGpuFan.Core();
+        var mem = AmdGpuFan.Memory();
+        var power = AmdGpuFan.Power();
+        if (core != null) ApplyReading(AmdCore, core.Value);
+        if (mem != null) ApplyReading(AmdMem, mem.Value);
+        if (power != null) ApplyReading(AmdPower, power.Value);
+        UpdateAmdLabels();
+    }
+
+    private void UpdateAmdLabels()
+    {
+        if (AmdCoreValue != null) AmdCoreValue.Text = Od8Tuning.Describe((int)Math.Round(AmdCore.Value), "MHz");
+        if (AmdMemValue != null) AmdMemValue.Text = Od8Tuning.Describe((int)Math.Round(AmdMem.Value), "MHz");
+        if (AmdPowerValue != null) AmdPowerValue.Text = Od8Tuning.Describe((int)Math.Round(AmdPower.Value), "%", signed: true);
+    }
+
+    private void AmdTuning_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        // ValueChanged também dispara durante o carregamento do XAML, antes dos campos existirem.
+        if (!_amdTuning) return;
+        UpdateAmdLabels();
+    }
+
+    /// <summary>
+    /// A roda do mouse rola a página em vez de mudar o slider. Sem isso, rolar a tela com o
+    /// ponteiro sobre um controle muda o valor sem o usuário perceber.
+    /// </summary>
+    private void Slider_PreviewMouseWheel(object sender, System.Windows.Input.MouseWheelEventArgs e)
+    {
+        e.Handled = true;
+        if (sender is not DependencyObject d) return;
+        for (DependencyObject? p = d; p != null; p = VisualTreeHelper.GetParent(p))
+        {
+            if (p is ScrollViewer scroll)
+            {
+                scroll.ScrollToVerticalOffset(scroll.VerticalOffset - e.Delta);
+                return;
+            }
+        }
+    }
+
+    private void BtnAmdApply_Click(object sender, RoutedEventArgs e)
+    {
+        if (!RequireAdmin()) return;
+
+        int core = (int)Math.Round(AmdCore.Value);
+        int mem = (int)Math.Round(AmdMem.Value);
+        int power = (int)Math.Round(AmdPower.Value);
+        if (!AmdGpuFan.ApplyTuning(core, mem, power, out string error))
+        {
+            AmdTuningResult.Text = "Não apliquei: " + error;
+            return;
+        }
+
+        RefreshAmdTuning();
+        AmdTuningResult.Text =
+            $"Aplicado e conferido na placa: GPU {core} MHz · memória {mem} MHz · energia " +
+            $"{Od8Tuning.Describe(power, "%", signed: true)}. Rode o verificador de estabilidade abaixo.";
+    }
+
+    private void BtnAmdReset_Click(object sender, RoutedEventArgs e)
+    {
+        if (!RequireAdmin()) return;
+        if (!AmdGpuFan.RestoreTuning(out string error))
+        {
+            AmdTuningResult.Text = "Não consegui voltar ao padrão: " + error;
+            return;
+        }
+
+        RefreshAmdTuning();
+        var coreNow = AmdGpuFan.Core();
+        string extra = coreNow is { } c && c.Current != c.Default
+            ? $" O clock da GPU ficou em {c.Current} MHz (o driver desta placa não aceita reduzir)."
+            : "";
+        AmdTuningResult.Text = "VRAM e energia de volta ao padrão de fábrica do driver." + extra;
+    }
+
+    // ================= Perfis de overclock =================
+
+    /// <summary>Recarrega a lista de perfis e seleciona um (por padrão, o que abre junto com o app).</summary>
+    private void RefreshOcProfiles(string? select = null)
+    {
+        var names = _settings.OcProfiles.Select(p => p.Name).ToList();
+        OcProfileBox.ItemsSource = names;
+        if (BtnOcProfileApply != null)
+            BtnOcProfileApply.IsEnabled = BtnOcProfileDelete.IsEnabled = names.Count > 0;
+        if (OcProfileAuto != null) OcProfileAuto.IsEnabled = names.Count > 0;
+
+        string? want = select ?? _settings.OcProfileOnStart;
+        int at = want == null
+            ? -1
+            : names.FindIndex(n => string.Equals(n, want, StringComparison.OrdinalIgnoreCase));
+        OcProfileBox.SelectedIndex = at >= 0 ? at : (names.Count > 0 ? 0 : -1);
+        UpdateOcProfileAuto();
+    }
+
+    /// <summary>Marca o "aplicar ao abrir" só quando o perfil escolhido é o que está salvo para a abertura.</summary>
+    private void UpdateOcProfileAuto()
+    {
+        if (OcProfileAuto == null) return;
+        bool on = OcProfileBox.SelectedItem is string name
+                  && string.Equals(_settings.OcProfileOnStart, name, StringComparison.OrdinalIgnoreCase);
+        OcProfileAuto.IsChecked = on;
+    }
+
+    private void OcProfile_Changed(object sender, SelectionChangedEventArgs e)
+    {
+        if (OcProfileAuto == null) return;
+        if (OcProfileBox.SelectedItem is string name) OcProfileName.Text = name;
+        UpdateOcProfileAuto();
+    }
+
+    private void BtnOcProfileSave_Click(object sender, RoutedEventArgs e)
+    {
+        string name = OcProfileName.Text.Trim();
+        if (name.Length == 0) name = OcProfileStore.UniqueName(_settings.OcProfiles, "Perfil");
+
+        var profile = new OcProfile
+        {
+            Name = name,
+            Core = (int)Math.Round(AmdCore.Value),
+            Mem = (int)Math.Round(AmdMem.Value),
+            Power = (int)Math.Round(AmdPower.Value),
+        };
+
+        bool replaced = OcProfileStore.IndexOf(_settings.OcProfiles, name) >= 0;
+        OcProfileStore.Save(_settings.OcProfiles, profile);
+        _settings.Save();
+
+        OcProfileName.Text = "";
+        RefreshOcProfiles(name);
+        OcProfileStatus.Text = (replaced ? $"Perfil \"{name}\" atualizado: " : $"Perfil \"{name}\" salvo: ")
+                               + OcProfileStore.Describe(profile) + ".";
+    }
+
+    private void BtnOcProfileApply_Click(object sender, RoutedEventArgs e)
+    {
+        if (OcProfileBox.SelectedItem is not string name) return;
+        if (OcProfileStore.Find(_settings.OcProfiles, name) is { } profile) ApplyOcProfile(profile);
+    }
+
+    private void BtnOcProfileDelete_Click(object sender, RoutedEventArgs e)
+    {
+        if (OcProfileBox.SelectedItem is not string name) return;
+        int at = OcProfileStore.IndexOf(_settings.OcProfiles, name);
+        if (at < 0) return;
+
+        _settings.OcProfiles.RemoveAt(at);
+        if (string.Equals(_settings.OcProfileOnStart, name, StringComparison.OrdinalIgnoreCase))
+            _settings.OcProfileOnStart = null;
+        _settings.Save();
+
+        RefreshOcProfiles();
+        OcProfileStatus.Text = $"Perfil \"{name}\" apagado.";
+    }
+
+    private void OcProfileAuto_Click(object sender, RoutedEventArgs e)
+    {
+        if (OcProfileBox.SelectedItem is not string name)
+        {
+            if (OcProfileAuto != null) OcProfileAuto.IsChecked = false;
+            OcProfileStatus.Text = "Salve um perfil antes de escolher um para abrir junto com o Gui_Tech.";
+            return;
+        }
+
+        bool on = OcProfileAuto.IsChecked == true;
+        _settings.OcProfileOnStart = on ? name : null;
+        _settings.Save();
+        OcProfileStatus.Text = on
+            ? $"Ao abrir o Gui_Tech, o perfil \"{name}\" será aplicado automaticamente."
+            : "Nenhum perfil é aplicado automaticamente ao abrir.";
+    }
+
+    /// <summary>
+    /// Põe os valores do perfil nos controles e aplica na placa. Usado pelo botão Aplicar e pelo
+    /// "aplicar ao abrir"; quando a placa já está com esses valores, só confirma (sem escrever).
+    /// </summary>
+    private bool ApplyOcProfile(OcProfile profile, bool startup = false)
+    {
+        if (!startup && !RequireAdmin()) return false;
+        if (!AmdGpuFan.TuningAvailable)
+        {
+            OcProfileStatus.Text = "Esta placa não expõe clock/energia pela API da AMD: o perfil não pode ser aplicado.";
+            return false;
+        }
+
+        int core = Od8Tuning.Fit(profile.Core, (int)AmdCore.Minimum, (int)AmdCore.Maximum);
+        int mem = Od8Tuning.Fit(profile.Mem, (int)AmdMem.Minimum, (int)AmdMem.Maximum);
+        int power = Od8Tuning.Fit(profile.Power, (int)AmdPower.Minimum, (int)AmdPower.Maximum);
+
+        AmdCore.Value = core;
+        AmdMem.Value = mem;
+        AmdPower.Value = power;
+        UpdateAmdLabels();
+
+        string label = $"Perfil \"{profile.Name}\"";
+        string when = startup ? " ao abrir o Gui_Tech" : "";
+
+        // Já está na placa (caso típico de abrir o app de novo no mesmo dia): não escreve de novo.
+        bool same = AmdGpuFan.Core() is { } c0 && c0.Current == core
+                    && AmdGpuFan.Memory() is { } m0 && m0.Current == mem
+                    && AmdGpuFan.Power() is { } p0 && p0.Current == power;
+        if (same)
+        {
+            RefreshAmdTuning();
+            OcProfileStatus.Text = $"{label} já estava aplicado{when}: {OcProfileStore.Describe(profile)}.";
+            return true;
+        }
+
+        if (!AmdGpuFan.ApplyTuning(core, mem, power, out string error))
+        {
+            OcProfileStatus.Text = $"{label} não entrou{when}: {error}";
+            return false;
+        }
+
+        RefreshAmdTuning();
+        OcProfileStatus.Text = $"{label} aplicado{when}: {OcProfileStore.Describe(profile)}.";
+        return true;
     }
 
     private void UpdateRecentErrors()

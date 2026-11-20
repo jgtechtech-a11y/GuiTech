@@ -3041,8 +3041,8 @@
                             <TextBlock Text="Ajustes da GPU, verificador de estabilidade e guia de overclock na BIOS" Style="{StaticResource Sub}"/>
                         </StackPanel>
 
-                        <!-- GPU: limite de energia e teto de clock -->
-                        <Border Style="{StaticResource CardBorder}" Margin="0,0,0,12">
+                        <!-- GPU: limite de energia e teto de clock (NVIDIA / NVML) -->
+                        <Border x:Name="OcNvCard" Style="{StaticResource CardBorder}" Margin="0,0,0,12">
                             <StackPanel>
                                 <TextBlock x:Name="OcGpuTitle" Style="{StaticResource Label}"/>
                                 <TextBlock x:Name="OcGpuState" Foreground="{DynamicResource Muted}" TextWrapping="Wrap" Margin="0,0,0,16"/>
@@ -3052,7 +3052,8 @@
                                     <TextBlock x:Name="OcPowerValue" FontFamily="{StaticResource Mono}" HorizontalAlignment="Right"/>
                                 </Grid>
                                 <Slider x:Name="OcPower" Minimum="175" Maximum="300" Value="250" TickFrequency="5"
-                                        IsSnapToTickEnabled="True" ValueChanged="OcPower_Changed"/>
+                                        IsSnapToTickEnabled="True" PreviewMouseWheel="Slider_PreviewMouseWheel"
+                                        ValueChanged="OcPower_Changed"/>
                                 <TextBlock Foreground="{DynamicResource Faint}" FontSize="11" TextWrapping="Wrap" Margin="0,6,0,16">
                                     Mais energia = clocks mais altos sustentados (e mais calor). Menos energia = PC mais frio e silencioso.
                                 </TextBlock>
@@ -3074,6 +3075,113 @@
                                 <TextBlock Foreground="{DynamicResource Faint}" FontSize="11" TextWrapping="Wrap" Margin="0,8,0,0">
                                     Ajustes temporários: voltam ao padrão ao reiniciar o PC. Usa só os controles oficiais do driver NVIDIA (NVML);
                                     offset de clock/memória não é liberado por essa via no Windows.
+                                </TextBlock>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Ajustes AMD: clock máximo, memória e limite de energia (Overdrive8) -->
+                        <Border x:Name="AmdTuningCard" Style="{StaticResource CardBorder}" Margin="0,0,0,12"
+                                Visibility="Collapsed">
+                            <StackPanel>
+                                <TextBlock x:Name="AmdTuningTitle" Style="{StaticResource Label}"/>
+                                <TextBlock x:Name="AmdTuningIntro" Foreground="{DynamicResource Muted}"
+                                           TextWrapping="Wrap" Margin="0,0,0,16"/>
+
+                                <Grid>
+                                    <TextBlock Text="CLOCK MÁXIMO DA GPU" Style="{StaticResource Label}"/>
+                                    <TextBlock x:Name="AmdCoreValue" FontFamily="{StaticResource Mono}"
+                                               HorizontalAlignment="Right"/>
+                                </Grid>
+                                <Slider x:Name="AmdCore" Minimum="800" Maximum="1820" Value="1780"
+                                        TickFrequency="5" IsSnapToTickEnabled="True"
+                                        PreviewMouseWheel="Slider_PreviewMouseWheel"
+                                        ValueChanged="AmdTuning_Changed"/>
+                                <TextBlock x:Name="AmdCoreHint" Foreground="{DynamicResource Faint}" FontSize="11"
+                                           TextWrapping="Wrap" Margin="0,6,0,14">
+                                    Teto de clock da GPU. Subir aumenta o FPS e o calor; o limite de energia
+                                    abaixo costuma ser o que segura o ganho.
+                                </TextBlock>
+
+                                <Grid>
+                                    <TextBlock Text="CLOCK DA MEMÓRIA (VRAM)" Style="{StaticResource Label}"/>
+                                    <TextBlock x:Name="AmdMemValue" FontFamily="{StaticResource Mono}"
+                                               HorizontalAlignment="Right"/>
+                                </Grid>
+                                <Slider x:Name="AmdMem" Minimum="1750" Maximum="1860" Value="1750"
+                                        TickFrequency="2" IsSnapToTickEnabled="True"
+                                        PreviewMouseWheel="Slider_PreviewMouseWheel"
+                                        ValueChanged="AmdTuning_Changed"/>
+                                <TextBlock Foreground="{DynamicResource Faint}" FontSize="11" TextWrapping="Wrap"
+                                           Margin="0,6,0,14">
+                                    Margem pequena na maioria das placas. Memória instável costuma aparecer como
+                                    artefatos na imagem ou travamento — volte um passo se acontecer.
+                                </TextBlock>
+
+                                <Grid>
+                                    <TextBlock Text="LIMITE DE ENERGIA" Style="{StaticResource Label}"/>
+                                    <TextBlock x:Name="AmdPowerValue" FontFamily="{StaticResource Mono}"
+                                               HorizontalAlignment="Right"/>
+                                </Grid>
+                                <Slider x:Name="AmdPower" Minimum="-50" Maximum="20" Value="0"
+                                        TickFrequency="1" IsSnapToTickEnabled="True"
+                                        PreviewMouseWheel="Slider_PreviewMouseWheel"
+                                        ValueChanged="AmdTuning_Changed"/>
+                                <TextBlock Foreground="{DynamicResource Faint}" FontSize="11" TextWrapping="Wrap"
+                                           Margin="0,6,0,16">
+                                    Mais energia = clocks mais altos sustentados (e mais calor). Menos energia =
+                                    PC mais frio e silencioso.
+                                </TextBlock>
+
+                                <WrapPanel>
+                                    <Button x:Name="BtnAmdApply" Style="{StaticResource PrimaryButton}" Content="Aplicar"
+                                            Padding="20,8" Margin="0,0,10,8" Click="BtnAmdApply_Click"/>
+                                    <Button x:Name="BtnAmdReset" Style="{StaticResource OutlineButton}"
+                                            Content="Restaurar padrão" Padding="20,8" Margin="0,0,10,8"
+                                            Click="BtnAmdReset_Click"/>
+                                </WrapPanel>
+                                <TextBlock x:Name="AmdTuningResult" TextWrapping="Wrap"/>
+
+                                <TextBlock Text="PERFIS DE OVERCLOCK" Style="{StaticResource Label}" Margin="0,16,0,0"/>
+                                <TextBlock Foreground="{DynamicResource Faint}" FontSize="11" TextWrapping="Wrap"
+                                           Margin="0,4,0,8">
+                                    Salve a combinação atual com um nome e volte a ela com um clique. O perfil marcado
+                                    abaixo é aplicado sozinho toda vez que o Gui_Tech abre.
+                                </TextBlock>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <ComboBox x:Name="OcProfileBox" MinWidth="200"
+                                              SelectionChanged="OcProfile_Changed"/>
+                                    <Button x:Name="BtnOcProfileApply" Grid.Column="1" Style="{StaticResource OutlineButton}"
+                                            Content="Aplicar" Padding="14,6" Margin="10,0,0,0"
+                                            Click="BtnOcProfileApply_Click"/>
+                                    <Button x:Name="BtnOcProfileDelete" Grid.Column="2" Style="{StaticResource OutlineButton}"
+                                            Content="Apagar" Padding="14,6" Margin="8,0,0,0"
+                                            Click="BtnOcProfileDelete_Click"/>
+                                </Grid>
+                                <Grid Margin="0,8,0,0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBox x:Name="OcProfileName" MinWidth="150"
+                                             Tag="nome do perfil (ex.: Diário, Jogo, Silencioso)"/>
+                                    <Button x:Name="BtnOcProfileSave" Grid.Column="1" Style="{StaticResource PrimaryButton}"
+                                            Content="Salvar atual" Padding="14,6" Margin="10,0,0,0"
+                                            Click="BtnOcProfileSave_Click"/>
+                                </Grid>
+                                <CheckBox x:Name="OcProfileAuto" Margin="0,10,0,0" Click="OcProfileAuto_Click"
+                                          Content="Aplicar este perfil quando o Gui_Tech abrir"/>
+                                <TextBlock x:Name="OcProfileStatus" Foreground="{DynamicResource Muted}"
+                                           TextWrapping="Wrap" Margin="0,8,0,0"/>
+                                <TextBlock Foreground="{DynamicResource Faint}" FontSize="11" TextWrapping="Wrap"
+                                           Margin="0,8,0,0">
+                                    Ajustes temporários: voltam ao padrão ao reiniciar o PC. Usa a API oficial de vídeo
+                                    da AMD (Overdrive8), sem instalar nada. Tensão não é exposta por essa API nesta
+                                    placa, e limitar FPS exigiria injetar código no jogo; por isso os dois ficam de fora.
                                 </TextBlock>
                             </StackPanel>
                         </Border>
@@ -3118,7 +3226,8 @@
                                     <TextBlock x:Name="FanTargetValue" HorizontalAlignment="Right" FontFamily="{StaticResource Mono}"/>
                                 </Grid>
                                 <Slider x:Name="FanTarget" Minimum="65" Maximum="90" Value="80" TickFrequency="1"
-                                        IsSnapToTickEnabled="True" ValueChanged="FanTarget_Changed"/>
+                                        IsSnapToTickEnabled="True" PreviewMouseWheel="Slider_PreviewMouseWheel"
+                                        ValueChanged="FanTarget_Changed"/>
                                 <TextBlock x:Name="FanTargetHint" Foreground="{DynamicResource Faint}" FontSize="11"
                                            TextWrapping="Wrap" Margin="0,6,0,14"/>
 

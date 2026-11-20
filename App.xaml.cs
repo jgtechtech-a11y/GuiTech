@@ -39,10 +39,15 @@ public partial class App : Application
         // --revisao = aberto pela tarefa da revisão semanal: roda o VERIFICAR PC em silêncio e sai.
         bool revisao = e.Args.Any(a => a.Equals("--revisao", StringComparison.OrdinalIgnoreCase) ||
                                        a.Equals("/revisao", StringComparison.OrdinalIgnoreCase));
+        // --teste = cópia de teste rodando ao lado da instalada: canais próprios (mutex e aviso de janela),
+        // para não confundir com a versão oficial que esteja aberta.
+        bool teste = e.Args.Any(a => a.Equals("--teste", StringComparison.OrdinalIgnoreCase) ||
+                                     a.Equals("/teste", StringComparison.OrdinalIgnoreCase));
+        string instance = teste ? ".Teste" : "";
 
         bool first;
-        try { _show = new EventWaitHandle(false, EventResetMode.AutoReset, @"Local\GuiTech.Show"); } catch { }
-        try { _single = new Mutex(true, @"Local\GuiTech.SingleInstance", out first); }
+        try { _show = new EventWaitHandle(false, EventResetMode.AutoReset, @"Local\GuiTech.Show" + instance); } catch { }
+        try { _single = new Mutex(true, @"Local\GuiTech.SingleInstance" + instance, out first); }
         catch (UnauthorizedAccessException) { first = false; } // criado por outra instância com outro nível de permissão
 
         if (!first)
@@ -53,7 +58,7 @@ public partial class App : Application
                 // O Gui_Tech já está aberto: avisa a instância que está rodando para fazer a revisão.
                 try { EventWaitHandle.OpenExisting(@"Local\GuiTech.Revisao").Set(); } catch { }
             }
-            IntPtr h = FindWindow(null, "Gui_Tech");
+            IntPtr h = teste ? IntPtr.Zero : FindWindow(null, "Gui_Tech");
             if (h != IntPtr.Zero)
             {
                 if (IsIconic(h)) ShowWindow(h, 9); // SW_RESTORE
@@ -85,6 +90,7 @@ public partial class App : Application
         splash.Dispatcher.Invoke(System.Windows.Threading.DispatcherPriority.Render, new Action(() => { }));
 
         var window = new MainWindow();
+        if (teste) window.Title += " · TESTE";
         try
         {
             if (tray) window.StartInTray();
